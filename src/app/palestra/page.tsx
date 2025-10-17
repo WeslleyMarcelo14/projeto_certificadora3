@@ -123,7 +123,7 @@ export default function Page() {
 					<input name="horario" value={form.horario} onChange={handleChange} required placeholder="Horário" type="time" className="px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400" />
 					<input name="local" value={form.local} onChange={handleChange} required placeholder="Local" className="px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400" />
 					<input name="palestrante" value={form.palestrante} onChange={handleChange} required placeholder="Palestrante responsável" className="px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400" />
-					<button type="submit" className="py-2 px-4 bg-blue-600 text-white font-bold rounded hover:bg-blue-700 transition-colors duration-300">{editId ? "Salvar edição" : "Adicionar palestra"}</button>
+					<button type="submit" className="py-2 px-4 bg-green-600 text-white font-bold rounded hover:bg-green-700 transition-colors duration-300">{editId ? "Salvar edição" : "Adicionar palestra"}</button>
 				</form>
 			) : (
 				<p className="mb-8 text-center text-gray-500">Apenas organizadores, palestrantes ou administradores podem criar ou editar palestras.</p>

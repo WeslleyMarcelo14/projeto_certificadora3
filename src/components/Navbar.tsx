@@ -8,13 +8,15 @@ export default function Navbar() {
         <Link href="/" className="text-2xl font-bold tracking-tight hover:text-purple-200 transition-colors duration-300">
           Certificadora 3 - Meninas Digitais
         </Link>
-
         <div className="flex items-center space-x-6">
           <Link href="/palestra" className="font-medium text-lg hover:text-purple-200 transition-colors duration-300">
-            Palestra
+            Palestras
+          </Link>
+          <Link href="/relatorios" className="font-medium text-lg hover:text-purple-200 transition-colors duration-300">
+            Relatórios
           </Link>
           <a 
-            href="https://github.com/seu-usuario/repo"  
+            href="https://github.com/WeslleyMarcelo14/projeto_certificadora3"  
             target="_blank" 
             rel="noopener noreferrer"
             className="font-medium text-lg hover:text-purple-200 transition-colors duration-300"
