@@ -3,9 +3,9 @@ import Link from 'next/link';
 
 export default function Navbar() {
   return (
-    <header className="w-full bg-purple-700 text-white shadow-md">
-      <nav className="container mx-auto flex items-center justify-between p-4">
-        <Link href="/" className="text-2xl font-bold tracking-tight hover:text-purple-200 transition-colors duration-300">
+    <header className="w-full bg-purple-700 text-white shadow-md ">
+      <nav className="container mx-auto flex items-center justify-between p-5">
+        <Link href="/" className="text-3xl font-bold tracking-tight hover:text-purple-200 transition-colors duration-300">
           Certificadora 3 - Meninas Digitais
         </Link>
         <div className="flex items-center space-x-6">
