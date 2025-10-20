@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { db } from "../firebase/page"; // Ajuste o caminho se necessário
+import { db } from "../firebase/page";
 import {
   collection,
   query,
@@ -12,7 +12,6 @@ import {
   doc,
 } from "firebase/firestore";
 
-// --- Tipos ---
 type Palestra = {
   id: string;
   tema: string;
@@ -23,34 +22,32 @@ type Palestra = {
   palestranteEmail: string;
 };
 
-// ATUALIZADO: Tipo Inscricao agora inclui 'presente'
 type Inscricao = {
   id: string;
   palestraId: string;
   participante: string;
   email: string;
-  presente?: boolean; // Novo campo para RF 6.3
+  presente?: boolean; 
 };
 
-// ... (userProfiles continua o mesmo) ...
 const userProfiles = {
   administrador: {
-    name: "Admin Henry",
+    name: "Henry",
     email: "admin@aaaaaaa.com",
     role: "administrador",
   },
   organizador: {
-    name: "Organizador ???",
+    name: "???",
     email: "organizador@gmail.com",
     role: "organizador",
   },
   palestrante: {
-    name: "Palestrante Maria",
+    name: "Maria",
     email: "palestrante@gmail.com",
     role: "palestrante",
   },
   participante: {
-    name: "Participante Joao",
+    name: "Joao",
     email: "participante@gmail.com",
     role: "participante",
   },
@@ -67,11 +64,10 @@ export default function Page() {
   } = userProfiles[currentUserRole];
 
   const [palestras, setPalestras] = useState<Palestra[]>([]);
-  const [inscricoesUsuario, setInscricoesUsuario] = useState<Inscricao[]>([]); // Apenas do usuário logado
+  const [inscricoesUsuario, setInscricoesUsuario] = useState<Inscricao[]>([]);
 
-  // --- NOVOS ESTADOS PARA GESTÃO DE PRESENÇA ---
-  const [todasInscricoes, setTodasInscricoes] = useState<Inscricao[]>([]); // Para Admins
-  const [modalPalestraId, setModalPalestraId] = useState<string | null>(null); // Controla o modal
+  const [todasInscricoes, setTodasInscricoes] = useState<Inscricao[]>([]); 
+  const [modalPalestraId, setModalPalestraId] = useState<string | null>(null); 
 
   const [mensagem, setMensagem] = useState("");
   const [form, setForm] = useState<Omit<Palestra, "id" | "palestranteEmail">>({
@@ -83,23 +79,19 @@ export default function Page() {
   });
   const [editId, setEditId] = useState<string | null>(null);
 
-  // Permissões
   const podeEditar =
     papel === "organizador" ||
     papel === "palestrante" ||
     papel === "administrador";
 
-  // Permissão para ver relatórios E listas de presença
   const podeVerRelatorio = papel === "organizador" || papel === "administrador";
 
-  // ... (useEffect para 'form.palestrante' continua o mesmo) ...
   useEffect(() => {
     if (papel === 'palestrante' || papel === 'administrador' || papel === 'organizador') {
       setForm(prevForm => ({ ...prevForm, palestrante: usuarioNome }));
     }
   }, [usuarioNome, papel]);
 
-  // Efeito para BUSCAR (READ) palestras (sem mudança)
   useEffect(() => {
     const q = query(collection(db, "palestras"));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
@@ -111,7 +103,6 @@ export default function Page() {
     return () => unsubscribe();
   }, []);
 
-  // Efeito para BUSCAR (READ) inscrições do usuário atual (sem mudança)
   useEffect(() => {
     if (papel !== "participante" || !usuarioEmail) {
       setInscricoesUsuario([]);
@@ -130,13 +121,11 @@ export default function Page() {
     return () => unsubscribe();
   }, [usuarioEmail, papel]);
 
-  // --- NOVO EFEITO: Buscar TODAS as inscrições (para Admins/Organizadores) ---
   useEffect(() => {
     if (!podeVerRelatorio) {
       setTodasInscricoes([]);
       return;
     }
-    // Busca todas as inscrições
     const q = query(collection(db, "inscricoes"));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const inscricoesData: Inscricao[] = querySnapshot.docs.map(
@@ -145,7 +134,7 @@ export default function Page() {
       setTodasInscricoes(inscricoesData);
     });
     return () => unsubscribe();
-  }, [podeVerRelatorio]); // Depende da permissão
+  }, [podeVerRelatorio]);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -192,24 +181,20 @@ export default function Page() {
         palestraId: palestra.id,
         participante: usuarioNome,
         email: usuarioEmail,
-        presente: false, // Define 'presente' como falso na inscrição
+        presente: false,
       });
       setMensagem(`Inscrição realizada para "${palestra.tema}"!`);
     } catch (error) {
       console.error("Erro ao inscrever: ", error);
     }
   }
-  // --- Fim das Funções CRUD ---
 
-
-  // --- NOVA FUNÇÃO: Marcar Presença (RF 6.3) ---
   async function handleMarcarPresenca(inscricaoId: string) {
     try {
       const inscricaoRef = doc(db, "inscricoes", inscricaoId);
       await updateDoc(inscricaoRef, {
         presente: true,
       });
-      // O onSnapshot atualizará a lista 'todasInscricoes' automaticamente
     } catch (error) {
       console.error("Erro ao marcar presença: ", error);
     }
@@ -217,7 +202,6 @@ export default function Page() {
 
   return (
     <div className="max-w-2xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-xl">
-      {/* ... (Seletor de usuário e Formulário - sem alteração) ... */}
       <div className="mb-8 p-4 bg-gray-50 rounded-lg border">
         <label htmlFor="role-select" className="block text-sm font-medium text-gray-800 mb-2">
           Simular login como:
@@ -270,16 +254,13 @@ export default function Page() {
               key={p.id}
               className="py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
             >
-              {/* ... (Info da palestra - sem alteração) ... */}
               <div>
                 <span className="font-semibold text-blue-700">{p.tema}</span> <br />
                 <span className="text-sm text-gray-600">{p.data} às {p.horario} | {p.local}</span> <br />
                 <span className="text-sm text-gray-600">Palestrante: {p.palestrante} ({p.palestranteEmail})</span>
               </div>
 
-              {/* --- BOTÕES ATUALIZADOS --- */}
               <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
-                {/* Botões de Editar/Excluir */}
                 {podeEditar &&
                   (p.palestranteEmail === usuarioEmail ||
                     papel === "organizador" ||
@@ -300,7 +281,6 @@ export default function Page() {
                     </>
                   )}
 
-                {/* NOVO: Botão de Ver Inscritos (RF 6.3) */}
                 {podeVerRelatorio && (
                   <button
                     onClick={() => setModalPalestraId(p.id)}
@@ -310,7 +290,6 @@ export default function Page() {
                   </button>
                 )}
 
-                {/* Botões de Inscrição (Participante) */}
                 {papel === "participante" && !inscrito && (
                   <button
                     onClick={() => handleInscricao(p)}
@@ -335,7 +314,6 @@ export default function Page() {
         </p>
       )}
 
-      {/* --- NOVO: MODAL DE LISTA DE PRESENÇA (RF 6.3) --- */}
       {modalPalestraId && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">

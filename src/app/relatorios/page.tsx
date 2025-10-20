@@ -1,9 +1,8 @@
 "use client";
 import React, { useState, useEffect, useMemo } from "react";
-import { db } from "../firebase/page"; // Ajuste o caminho se necessário
+import { db } from "../firebase/page";
 import { collection, onSnapshot } from "firebase/firestore";
 
-// --- Tipos de Dados (do Firestore) ---
 type Palestra = {
   id: string;
   tema: string;
@@ -12,10 +11,9 @@ type Palestra = {
 type Inscricao = {
   id: string;
   palestraId: string;
-  presente?: boolean; // O campo de presença
+  presente?: boolean;
 };
 
-// ... (userProfiles continua o mesmo) ...
 const userProfiles = {
   administrador: {
     name: "Admin Henry",
@@ -40,7 +38,6 @@ const userProfiles = {
 };
 type UserRole = keyof typeof userProfiles;
 
-// --- Componente da Página ---
 export default function RelatoriosPage() {
   const [currentUserRole, setCurrentUserRole] =
     useState<UserRole>("administrador");
@@ -50,28 +47,25 @@ export default function RelatoriosPage() {
     role: papel,
   } = userProfiles[currentUserRole];
 
-  // --- Estados para os dados do Firestore ---
   const [palestras, setPalestras] = useState<Palestra[]>([]);
   const [inscricoes, setInscricoes] = useState<Inscricao[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // RF 6.1: Acesso Restrito
   const podeVerRelatorio = papel === "organizador" || papel === "administrador";
 
-  // --- Efeitos para buscar dados (apenas se tiver permissão) ---
   useEffect(() => {
     if (!podeVerRelatorio) {
       setLoading(false);
-      return () => {}; // Retorna função vazia
+      return () => { };
     }
-    
+
     setLoading(true);
     const unsubPalestras = onSnapshot(
       collection(db, "palestras"),
       (snapshot) => {
         const palestrasData: Palestra[] = snapshot.docs.map((doc) => ({
           id: doc.id,
-          tema: doc.data().tema, // Pega só o ID e o tema
+          tema: doc.data().tema,
         } as Palestra));
         setPalestras(palestrasData);
         setLoading(false);
@@ -79,39 +73,34 @@ export default function RelatoriosPage() {
     );
 
     const unsubInscricoes = onSnapshot(
-        collection(db, "inscricoes"),
-        (snapshot) => {
-          const inscricoesData: Inscricao[] = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            palestraId: doc.data().palestraId,
-            presente: doc.data().presente,
-          } as Inscricao));
-          setInscricoes(inscricoesData);
-          setLoading(false);
-        }
-      );
+      collection(db, "inscricoes"),
+      (snapshot) => {
+        const inscricoesData: Inscricao[] = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          palestraId: doc.data().palestraId,
+          presente: doc.data().presente,
+        } as Inscricao));
+        setInscricoes(inscricoesData);
+        setLoading(false);
+      }
+    );
 
-    // Limpa as inscrições
     return () => {
-        unsubPalestras();
-        unsubInscricoes();
+      unsubPalestras();
+      unsubInscricoes();
     };
-  }, [podeVerRelatorio]); // Roda de novo se o usuário mudar
+  }, [podeVerRelatorio]);
 
-
-  // --- Cálculos dos Relatórios (RF 6.2, 6.4, 6.5) ---
   const relatorios = useMemo(() => {
-    // RF 6.2
+
     const totalPalestras = palestras.length;
     const totalInscritos = inscricoes.length;
-    
-    // RF 6.4
+
     const totalPresentes = inscricoes.filter(i => i.presente === true).length;
-    const taxaPresencaGeral = totalInscritos > 0 
-      ? (totalPresentes / totalInscritos) * 100 
+    const taxaPresencaGeral = totalInscritos > 0
+      ? (totalPresentes / totalInscritos) * 100
       : 0;
 
-    // RF 6.2 e 6.4 (por palestra)
     const detalhesPorPalestra = palestras.map((palestra) => {
       const inscritosNaPalestra = inscricoes.filter(
         (i) => i.palestraId === palestra.id
@@ -119,7 +108,7 @@ export default function RelatoriosPage() {
       const presentesNaPalestra = inscritosNaPalestra.filter(
         (i) => i.presente === true
       ).length;
-      
+
       const taxaPresencaPalestra = inscritosNaPalestra.length > 0
         ? (presentesNaPalestra / inscritosNaPalestra.length) * 100
         : 0;
@@ -133,10 +122,9 @@ export default function RelatoriosPage() {
       };
     });
 
-    // RF 6.5 (Engajamento simples: Top 5 por Inscrição)
-    const rankingEngajamento = [...detalhesPorPalestra] // Copia o array
-      .sort((a, b) => b.inscritos - a.inscritos) // Ordena por mais inscritos
-      .slice(0, 5); // Pega o Top 5
+    const rankingEngajamento = [...detalhesPorPalestra]
+      .sort((a, b) => b.inscritos - a.inscritos)
+      .slice(0, 5);
 
     return {
       totalPalestras,
@@ -152,7 +140,6 @@ export default function RelatoriosPage() {
   return (
     <div className="max-w-4xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-xl">
       <div className="mb-8 p-4 bg-gray-50 rounded-lg border">
-        {/* ... (Seletor de usuário) ... */}
         <label
           htmlFor="role-select"
           className="block text-sm font-medium text-gray-800 mb-2"
@@ -182,14 +169,12 @@ export default function RelatoriosPage() {
         Painel de Relatórios
       </h2>
 
-      {/* RF 6.1: Controle de Acesso */}
       {podeVerRelatorio ? (
         <>
           {loading ? (
             <p className="text-center text-gray-500">Carregando dados...</p>
           ) : (
             <div>
-              {/* --- Cards de Resumo (RF 6.2 e 6.4) --- */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                 <div className="bg-blue-100 rounded p-4 text-center">
                   <span className="block text-2xl font-bold">{relatorios.totalPalestras}</span>
@@ -208,9 +193,8 @@ export default function RelatoriosPage() {
                   <span className="text-gray-700">Taxa de Presença</span>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* --- Tabela de Detalhes (RF 6.2 e 6.4) --- */}
                 <div className="md:col-span-2">
                   <h3 className="text-lg font-semibold mb-4">
                     Detalhes por Palestra
@@ -239,7 +223,6 @@ export default function RelatoriosPage() {
                   </div>
                 </div>
 
-                {/* --- Tabela de Engajamento (RF 6.5) --- */}
                 <div>
                   <h3 className="text-lg font-semibold mb-4">
                     Top 5 Engajamento (por Inscrição)
@@ -266,7 +249,6 @@ export default function RelatoriosPage() {
           )}
         </>
       ) : (
-        // --- Mensagem de Acesso Restrito (RF 6.1) ---
         <div className="text-center p-8 bg-red-50 rounded-lg">
           <h3 className="text-xl font-bold text-red-700">Acesso Restrito</h3>
           <p className="text-gray-600 mt-2">
