@@ -4,7 +4,7 @@ import { FaGithub, FaInstagram } from "react-icons/fa";
 export default function Navbar() {
   return (
     <header className="w-full bg-gradient-to-r from-primary via-primary-hover to-accent shadow-lg sticky top-0 z-50">
-      <nav className="container mx-auto flex items-center justify-between px-6 py-4">
+      <nav className="container mx-auto flex items-center justify-between px-2 py-5">
         <Link 
           href="/" 
           className="text-2xl md:text-3xl font-bold tracking-tight text-primary-foreground hover:opacity-90 transition-opacity duration-300"

@@ -2,7 +2,7 @@ import { FaGithub, FaInstagram } from "react-icons/fa";
 
 export default function Footer() {
   return (
-    <footer className="w-full bg-gradient-to-r from-primary via-primary-hover to-accent text-primary-foreground py-8 mt-auto">
+    <footer className="w-full bg-gradient-to-r from-primary via-primary-hover to-accent text-primary-foreground py-5 mt-auto">
       <div className="container mx-auto flex flex-col md:flex-row items-center justify-between px-6">
         <div className="text-center md:text-left mb-4 md:mb-0">
           <p className="font-semibold text-lg">&copy; {new Date().getFullYear()} Projeto Certificadora 3</p>

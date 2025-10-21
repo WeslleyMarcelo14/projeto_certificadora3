@@ -4,10 +4,10 @@ import { Button } from "../components/ui/button";
 const Index = () => {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-secondary/30 to-background">
-      <main className="flex-1 flex items-center justify-center px-4 py-16">
+      <main className="wflex-1 flex items-center justify-center px-4 py-16">
         <div className="max-w-4xl text-center">
           <div className="mb-8">
-            <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent mb-6 animate-fade-in">
+            <h1 className="h-24 text-5xl md:text-7xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent mb-7 animate-fade-in">
               Meninas Digitais
             </h1>
             <h2 className="text-3xl md:text-4xl font-semibold text-foreground mb-4">

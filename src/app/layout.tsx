@@ -19,7 +19,7 @@ export default function RootLayout({
       <body className="antialiased bg-gray-50 flex flex-col min-h-screen">
         <Providers>
           <Navbar />
-          <main className="flex-grow container mx-auto p-4 md:p-8">
+          <main>
             {children}
           </main>
           <Footer />
