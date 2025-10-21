@@ -1,68 +1,65 @@
-"use client";
-import React, { useState } from "react";
-import { signIn } from "next-auth/react";
+import Link from "next/link";
+import { Button } from "../components/ui/button";
 
-export default function Page() {
-  const [form, setForm] = useState({
-    email: "",
-    senha: "",
-  });
-  const [mensagem, setMensagem] = useState("");
-  const [erro, setErro] = useState("");
-
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setErro("");
-    setMensagem("");
-    const res = await signIn("credentials", {
-      redirect: false,
-      email: form.email,
-      password: form.senha,
-    });
-    if (res?.error) {
-      setErro("Email ou senha inválidos.");
-    } else {
-      setMensagem("Login realizado com sucesso!");
-      setForm({ email: "", senha: "" });
-    }
-  }
-
+const Index = () => {
   return (
-    <div className="max-w-md mx-auto mt-16 p-8 border border-gray-200 rounded-lg shadow bg-white">
-      <h2 className="text-3xl font-bold mb-8 text-center text-blue-700">Login</h2>
-      <form onSubmit={handleSubmit}>
-        <div className="mb-6">
-          <label className="block mb-2 font-semibold text-gray-700">Email</label>
-          <input
-            type="email"
-            name="email"
-            value={form.email}
-            onChange={handleChange}
-            required
-            placeholder="Digite seu email"
-            className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-          />
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-secondary/30 to-background">
+      <main className="flex-1 flex items-center justify-center px-4 py-16">
+        <div className="max-w-4xl text-center">
+          <div className="mb-8">
+            <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent mb-6 animate-fade-in">
+              Meninas Digitais
+            </h1>
+            <h2 className="text-3xl md:text-4xl font-semibold text-foreground mb-4">
+              Sistema de Gerenciamento de Palestras
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Plataforma para organização, inscrição e acompanhamento de palestras e eventos acadêmicos da UTFPR-CP
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+            <Link href="../palestra/">
+              <Button size="lg" className="text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-all duration-300">
+                Ver Palestras
+              </Button>
+            </Link>
+            <Link href="/relatorios/">
+              <Button size="lg" variant="outline" className="text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-all duration-300">
+                Acessar Relatórios
+              </Button>
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16">
+            <div className="bg-card rounded-xl shadow-lg p-6 border border-border hover:shadow-xl transition-shadow duration-300">
+              <div className="text-4xl mb-4">📚</div>
+              <h3 className="text-xl font-semibold mb-2 text-card-foreground">Palestras</h3>
+              <p className="text-muted-foreground">
+                Explore e inscreva-se em palestras sobre tecnologia, inovação e empreendedorismo
+              </p>
+            </div>
+
+            <div className="bg-card rounded-xl shadow-lg p-6 border border-border hover:shadow-xl transition-shadow duration-300">
+              <div className="text-4xl mb-4">👥</div>
+              <h3 className="text-xl font-semibold mb-2 text-card-foreground">Gestão</h3>
+              <p className="text-muted-foreground">
+                Organize eventos, gerencie inscrições e acompanhe a participação em tempo real
+              </p>
+            </div>
+
+            <div className="bg-card rounded-xl shadow-lg p-6 border border-border hover:shadow-xl transition-shadow duration-300">
+              <div className="text-4xl mb-4">📊</div>
+              <h3 className="text-xl font-semibold mb-2 text-card-foreground">Relatórios</h3>
+              <p className="text-muted-foreground">
+                Visualize estatísticas detalhadas e indicadores de presença e engajamento
+              </p>
+            </div>
+          </div>
         </div>
-        <div className="mb-6">
-          <label className="block mb-2 font-semibold text-gray-700">Senha</label>
-          <input
-            type="password"
-            name="senha"
-            value={form.senha}
-            onChange={handleChange}
-            required
-            placeholder="Digite sua senha"
-            className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-          />
-        </div>
-        <button type="submit" className="w-full py-2 px-4 bg-blue-600 text-white font-bold rounded hover:bg-blue-700 transition">Entrar</button>
-      </form>
-      {mensagem && <p className="text-green-600 mt-6 text-center font-semibold">{mensagem}</p>}
-      {erro && <p className="text-red-600 mt-2 text-center font-semibold">{erro}</p>}
+      </main>
     </div>
   );
-}
+};
+
+export default Index;

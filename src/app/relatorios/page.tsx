@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { db } from "../firebase/page";
 import { collection, onSnapshot } from "firebase/firestore";
 
@@ -21,7 +21,7 @@ const userProfiles = {
     role: "administrador",
   },
   organizador: {
-    name: "Organizador ???",
+    name: "Organizador",
     email: "organizador@gmail.com",
     role: "organizador",
   },
@@ -31,21 +31,18 @@ const userProfiles = {
     role: "palestrante",
   },
   participante: {
-    name: "Participante Joao",
+    name: "Participante João",
     email: "participante@gmail.com",
     role: "participante",
   },
 };
+
 type UserRole = keyof typeof userProfiles;
 
-export default function RelatoriosPage() {
+export default function Relatorios() {
   const [currentUserRole, setCurrentUserRole] =
     useState<UserRole>("administrador");
-  const {
-    name: usuarioNome,
-    email: usuarioEmail,
-    role: papel,
-  } = userProfiles[currentUserRole];
+  const { role: papel } = userProfiles[currentUserRole];
 
   const [palestras, setPalestras] = useState<Palestra[]>([]);
   const [inscricoes, setInscricoes] = useState<Inscricao[]>([]);
@@ -68,7 +65,6 @@ export default function RelatoriosPage() {
           tema: doc.data().tema,
         } as Palestra));
         setPalestras(palestrasData);
-        setLoading(false);
       }
     );
 
@@ -92,171 +88,183 @@ export default function RelatoriosPage() {
   }, [podeVerRelatorio]);
 
   const relatorios = useMemo(() => {
-
     const totalPalestras = palestras.length;
-    const totalInscritos = inscricoes.length;
+    const totalInscricoes = inscricoes.length;
+    const presencasConfirmadas = inscricoes.filter((i) => i.presente).length;
+    const percentualPresenca =
+      totalInscricoes > 0
+        ? ((presencasConfirmadas / totalInscricoes) * 100).toFixed(1)
+        : "0.0";
 
-    const totalPresentes = inscricoes.filter(i => i.presente === true).length;
-    const taxaPresencaGeral = totalInscritos > 0
-      ? (totalPresentes / totalInscritos) * 100
-      : 0;
-
-    const detalhesPorPalestra = palestras.map((palestra) => {
-      const inscritosNaPalestra = inscricoes.filter(
-        (i) => i.palestraId === palestra.id
-      );
-      const presentesNaPalestra = inscritosNaPalestra.filter(
-        (i) => i.presente === true
-      ).length;
-
-      const taxaPresencaPalestra = inscritosNaPalestra.length > 0
-        ? (presentesNaPalestra / inscritosNaPalestra.length) * 100
-        : 0;
-
+    const porPalestra = palestras.map((p) => {
+      const inscricoesP = inscricoes.filter((i) => i.palestraId === p.id);
+      const presentesP = inscricoesP.filter((i) => i.presente).length;
+      const percentualP =
+        inscricoesP.length > 0
+          ? ((presentesP / inscricoesP.length) * 100).toFixed(1)
+          : "0.0";
       return {
-        id: palestra.id,
-        tema: palestra.tema,
-        inscritos: inscritosNaPalestra.length,
-        presentes: presentesNaPalestra,
-        taxaPresenca: taxaPresencaPalestra,
+        tema: p.tema,
+        totalInscritos: inscricoesP.length,
+        presentes: presentesP,
+        percentual: percentualP,
       };
     });
 
-    const rankingEngajamento = [...detalhesPorPalestra]
-      .sort((a, b) => b.inscritos - a.inscritos)
-      .slice(0, 5);
-
     return {
       totalPalestras,
-      totalInscritos,
-      totalPresentes,
-      taxaPresencaGeral,
-      detalhesPorPalestra,
-      rankingEngajamento
+      totalInscricoes,
+      presencasConfirmadas,
+      percentualPresenca,
+      porPalestra,
     };
   }, [palestras, inscricoes]);
 
+  if (!podeVerRelatorio) {
+    return (
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-secondary/30 to-background">
+        <main className="flex-1 container mx-auto px-4 py-8">
+          <div className="bg-destructive/10 border border-destructive rounded-xl p-8 text-center">
+            <h2 className="text-2xl font-bold text-destructive mb-2">
+              Acesso Negado
+            </h2>
+            <p className="text-muted-foreground">
+              Você não tem permissão para visualizar relatórios.
+            </p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background via-secondary/30 to-background">
+        <p className="text-2xl text-foreground">Carregando relatórios...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-4xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-xl">
-      <div className="mb-8 p-4 bg-gray-50 rounded-lg border">
-        <label
-          htmlFor="role-select"
-          className="block text-sm font-medium text-gray-800 mb-2"
-        >
-          Simular login como:
-        </label>
-        <select
-          id="role-select"
-          value={currentUserRole}
-          onChange={(e) => setCurrentUserRole(e.target.value as UserRole)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="administrador">Administrador</option>
-          <option value="organizador">Organizador</option>
-          <option value="palestrante">Palestrante</option>
-          <option value="participante">Participante</option>
-        </select>
-        <p className="text-xs text-gray-600 mt-2">
-          Logado como:{" "}
-          <span className="font-semibold text-gray-900">
-            {usuarioNome} ({usuarioEmail})
-          </span>
-        </p>
-      </div>
-
-      <h2 className="text-2xl font-bold mb-6 text-blue-700 text-center">
-        Painel de Relatórios
-      </h2>
-
-      {podeVerRelatorio ? (
-        <>
-          {loading ? (
-            <p className="text-center text-gray-500">Carregando dados...</p>
-          ) : (
-            <div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                <div className="bg-blue-100 rounded p-4 text-center">
-                  <span className="block text-2xl font-bold">{relatorios.totalPalestras}</span>
-                  <span className="text-gray-700">Palestras</span>
-                </div>
-                <div className="bg-green-100 rounded p-4 text-center">
-                  <span className="block text-2xl font-bold">{relatorios.totalInscritos}</span>
-                  <span className="text-gray-700">Inscrições</span>
-                </div>
-                <div className="bg-teal-100 rounded p-4 text-center">
-                  <span className="block text-2xl font-bold">{relatorios.totalPresentes}</span>
-                  <span className="text-gray-700">Presentes</span>
-                </div>
-                <div className="bg-yellow-100 rounded p-4 text-center">
-                  <span className="block text-2xl font-bold">{relatorios.taxaPresencaGeral.toFixed(1)}%</span>
-                  <span className="text-gray-700">Taxa de Presença</span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="md:col-span-2">
-                  <h3 className="text-lg font-semibold mb-4">
-                    Detalhes por Palestra
-                  </h3>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="bg-gray-100">
-                          <th className="p-2 border">Tema</th>
-                          <th className="p-2 border text-center">Inscritos</th>
-                          <th className="p-2 border text-center">Presentes</th>
-                          <th className="p-2 border text-center">Taxa (%)</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {relatorios.detalhesPorPalestra.map((p) => (
-                          <tr key={p.id} className="border-t">
-                            <td className="p-2 border">{p.tema}</td>
-                            <td className="p-2 border text-center">{p.inscritos}</td>
-                            <td className="p-2 border text-center">{p.presentes}</td>
-                            <td className="p-2 border text-center">{p.taxaPresenca.toFixed(1)}%</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">
-                    Top 5 Engajamento (por Inscrição)
-                  </h3>
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="bg-gray-100">
-                        <th className="p-2 border">Tema</th>
-                        <th className="p-2 border text-center">Inscritos</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {relatorios.rankingEngajamento.map((p) => (
-                        <tr key={p.id} className="border-t">
-                          <td className="p-2 border">{p.tema}</td>
-                          <td className="p-2 border text-center">{p.inscritos}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          )}
-        </>
-      ) : (
-        <div className="text-center p-8 bg-red-50 rounded-lg">
-          <h3 className="text-xl font-bold text-red-700">Acesso Restrito</h3>
-          <p className="text-gray-600 mt-2">
-            Somente organizadores e administradores podem visualizar os
-            relatórios.
-          </p>
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-secondary/30 to-background">
+      <main className="flex-1 container mx-auto px-4 py-8">
+        <div className="bg-card rounded-xl shadow-lg p-6 mb-8 border border-border">
+          <h2 className="text-xl font-semibold mb-4 text-card-foreground">
+            Visualizar como:
+          </h2>
+          <div className="flex flex-wrap gap-3">
+            {(Object.keys(userProfiles) as UserRole[]).map((role) => (
+              <button
+                key={role}
+                onClick={() => setCurrentUserRole(role)}
+                className={`px-6 py-2.5 rounded-lg font-medium transition-all duration-300 ${currentUserRole === role
+                    ? "bg-primary text-primary-foreground shadow-lg scale-105"
+                    : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                  }`}
+              >
+                {userProfiles[role].name}
+              </button>
+            ))}
+          </div>
         </div>
-      )}
+
+        <h1 className="text-4xl font-bold mb-8 text-foreground">
+          Relatórios de Palestras
+        </h1>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-gradient-to-br from-primary to-primary-hover rounded-xl shadow-lg p-6 text-primary-foreground">
+            <h3 className="text-lg font-semibold mb-2 opacity-90">
+              Total de Palestras
+            </h3>
+            <p className="text-4xl font-bold">{relatorios.totalPalestras}</p>
+          </div>
+
+          <div className="bg-gradient-to-br from-accent to-primary rounded-xl shadow-lg p-6 text-accent-foreground">
+            <h3 className="text-lg font-semibold mb-2 opacity-90">
+              Total de Inscrições
+            </h3>
+            <p className="text-4xl font-bold">{relatorios.totalInscricoes}</p>
+          </div>
+
+          <div className="bg-gradient-to-br from-success to-success/80 rounded-xl shadow-lg p-6 text-success-foreground">
+            <h3 className="text-lg font-semibold mb-2 opacity-90">
+              Presenças Confirmadas
+            </h3>
+            <p className="text-4xl font-bold">
+              {relatorios.presencasConfirmadas}
+            </p>
+          </div>
+
+          <div className="bg-gradient-to-br from-secondary to-muted rounded-xl shadow-lg p-6 text-secondary-foreground">
+            <h3 className="text-lg font-semibold mb-2">Taxa de Presença</h3>
+            <p className="text-4xl font-bold">
+              {relatorios.percentualPresenca}%
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-card rounded-xl shadow-lg border border-border overflow-hidden">
+          <div className="bg-gradient-to-r from-primary to-accent p-6">
+            <h2 className="text-2xl font-bold text-primary-foreground">
+              Detalhamento por Palestra
+            </h2>
+          </div>
+
+          <div className="p-6">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left py-4 px-4 font-semibold text-foreground">
+                      Palestra
+                    </th>
+                    <th className="text-center py-4 px-4 font-semibold text-foreground">
+                      Inscritos
+                    </th>
+                    <th className="text-center py-4 px-4 font-semibold text-foreground">
+                      Presentes
+                    </th>
+                    <th className="text-center py-4 px-4 font-semibold text-foreground">
+                      Taxa de Presença
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {relatorios.porPalestra.map((rel, idx) => (
+                    <tr
+                      key={idx}
+                      className="border-b border-border last:border-0 hover:bg-muted/50 transition-colors"
+                    >
+                      <td className="py-4 px-4 font-medium text-card-foreground">
+                        {rel.tema}
+                      </td>
+                      <td className="py-4 px-4 text-center text-muted-foreground">
+                        {rel.totalInscritos}
+                      </td>
+                      <td className="py-4 px-4 text-center text-success font-semibold">
+                        {rel.presentes}
+                      </td>
+                      <td className="py-4 px-4 text-center">
+                        <span
+                          className={`inline-block px-3 py-1 rounded-full font-semibold ${parseFloat(rel.percentual) >= 70
+                              ? "bg-success/20 text-success"
+                              : parseFloat(rel.percentual) >= 40
+                                ? "bg-accent/20 text-accent"
+                                : "bg-destructive/20 text-destructive"
+                            }`}
+                        >
+                          {rel.percentual}%
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
     </div>
   );
 }

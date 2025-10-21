@@ -12,6 +12,10 @@ import {
   doc,
 } from "firebase/firestore";
 
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { toast } from "sonner";
+
 type Palestra = {
   id: string;
   tema: string;
@@ -27,7 +31,7 @@ type Inscricao = {
   palestraId: string;
   participante: string;
   email: string;
-  presente?: boolean; 
+  presente?: boolean;
 };
 
 const userProfiles = {
@@ -37,7 +41,7 @@ const userProfiles = {
     role: "administrador",
   },
   organizador: {
-    name: "???",
+    name: "Organizador",
     email: "organizador@gmail.com",
     role: "organizador",
   },
@@ -47,16 +51,16 @@ const userProfiles = {
     role: "palestrante",
   },
   participante: {
-    name: "Joao",
+    name: "João",
     email: "participante@gmail.com",
     role: "participante",
   },
 };
 type UserRole = keyof typeof userProfiles;
 
-export default function Page() {
+export default function Palestras() {
   const [currentUserRole, setCurrentUserRole] =
-    useState<UserRole>("administrador");
+    useState<UserRole>("participante");
   const {
     name: usuarioNome,
     email: usuarioEmail,
@@ -66,16 +70,12 @@ export default function Page() {
   const [palestras, setPalestras] = useState<Palestra[]>([]);
   const [inscricoesUsuario, setInscricoesUsuario] = useState<Inscricao[]>([]);
 
-  const [todasInscricoes, setTodasInscricoes] = useState<Inscricao[]>([]); 
-  const [modalPalestraId, setModalPalestraId] = useState<string | null>(null); 
-
-  const [mensagem, setMensagem] = useState("");
-  const [form, setForm] = useState<Omit<Palestra, "id" | "palestranteEmail">>({
+  const [form, setForm] = useState({
     tema: "",
     data: "",
     horario: "",
     local: "",
-    palestrante: usuarioNome || "",
+    palestrante: "",
   });
   const [editId, setEditId] = useState<string | null>(null);
 
@@ -84,13 +84,13 @@ export default function Page() {
     papel === "palestrante" ||
     papel === "administrador";
 
-  const podeVerRelatorio = papel === "organizador" || papel === "administrador";
-
   useEffect(() => {
-    if (papel === 'palestrante' || papel === 'administrador' || papel === 'organizador') {
-      setForm(prevForm => ({ ...prevForm, palestrante: usuarioNome }));
+    if (podeEditar) {
+      setForm((prevForm) => ({ ...prevForm, palestrante: usuarioNome }));
+    } else {
+      setForm((prevForm) => ({ ...prevForm, palestrante: "" }));
     }
-  }, [usuarioNome, papel]);
+  }, [usuarioNome, podeEditar]);
 
   useEffect(() => {
     const q = query(collection(db, "palestras"));
@@ -121,61 +121,17 @@ export default function Page() {
     return () => unsubscribe();
   }, [usuarioEmail, papel]);
 
-  useEffect(() => {
-    if (!podeVerRelatorio) {
-      setTodasInscricoes([]);
+  const handleInscrever = async (palestra: Palestra) => {
+    if (!usuarioNome || !usuarioEmail) return;
+
+    const jaInscrito = inscricoesUsuario.some(
+      (i) => i.palestraId === palestra.id
+    );
+    if (jaInscrito) {
+      toast.error("Você já está inscrito nesta palestra");
       return;
     }
-    const q = query(collection(db, "inscricoes"));
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const inscricoesData: Inscricao[] = querySnapshot.docs.map(
-        (doc) => ({ ...doc.data(), id: doc.id } as Inscricao)
-      );
-      setTodasInscricoes(inscricoesData);
-    });
-    return () => unsubscribe();
-  }, [podeVerRelatorio]);
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!usuarioNome || !usuarioEmail) return;
-    try {
-      if (editId !== null) {
-        const palestraRef = doc(db, "palestras", editId);
-        await updateDoc(palestraRef, { ...form, palestranteEmail: usuarioEmail });
-        setEditId(null);
-      } else {
-        await addDoc(collection(db, "palestras"), { ...form, palestranteEmail: usuarioEmail });
-      }
-      setForm({ tema: "", data: "", horario: "", local: "", palestrante: usuarioNome });
-    } catch (error) {
-      console.error("Erro ao salvar palestra: ", error);
-    }
-  }
-  function handleEdit(id: string) {
-    const palestra = palestras.find((p) => p.id === id);
-    if (palestra) {
-      setForm({ tema: palestra.tema, data: palestra.data, horario: palestra.horario, local: palestra.local, palestrante: palestra.palestrante });
-      setEditId(id);
-    }
-  }
-  async function handleDelete(id: string) {
-    try {
-      await deleteDoc(doc(db, "palestras", id));
-      if (editId === id) {
-        setEditId(null);
-        setForm({ tema: "", data: "", horario: "", local: "", palestrante: usuarioNome });
-      }
-    } catch (error) {
-      console.error("Erro ao excluir palestra: ", error);
-    }
-  }
-  async function handleInscricao(palestra: Palestra) {
-    if (!usuarioNome || !usuarioEmail) return;
     try {
       await addDoc(collection(db, "inscricoes"), {
         palestraId: palestra.id,
@@ -183,180 +139,308 @@ export default function Page() {
         email: usuarioEmail,
         presente: false,
       });
-      setMensagem(`Inscrição realizada para "${palestra.tema}"!`);
+      toast.success(`Inscrição realizada em "${palestra.tema}"!`);
     } catch (error) {
       console.error("Erro ao inscrever: ", error);
+      toast.error("Erro ao tentar realizar inscrição.");
     }
-  }
+  };
 
-  async function handleMarcarPresenca(inscricaoId: string) {
-    try {
-      const inscricaoRef = doc(db, "inscricoes", inscricaoId);
-      await updateDoc(inscricaoRef, {
-        presente: true,
-      });
-    } catch (error) {
-      console.error("Erro ao marcar presença: ", error);
+  const handleCancelarInscricao = async (palestraId: string) => {
+    const inscricao = inscricoesUsuario.find(
+      (i) => i.palestraId === palestraId
+    );
+    if (!inscricao) {
+      toast.error("Inscrição não encontrada.");
+      return;
     }
-  }
+    try {
+      await deleteDoc(doc(db, "inscricoes", inscricao.id));
+      toast.info("Inscrição cancelada");
+    } catch (error) {
+      console.error("Erro ao cancelar inscrição: ", error);
+      toast.error("Erro ao tentar cancelar inscrição.");
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!usuarioNome || !usuarioEmail || !podeEditar) return;
+
+    try {
+      if (editId) {
+        const palestraRef = doc(db, "palestras", editId);
+        await updateDoc(palestraRef, {
+          ...form,
+          palestranteEmail: usuarioEmail,
+        });
+        toast.success("Palestra atualizada com sucesso!");
+      } else {
+        await addDoc(collection(db, "palestras"), {
+          ...form,
+          palestranteEmail: usuarioEmail,
+        });
+        toast.success("Palestra criada com sucesso!");
+      }
+      setForm({
+        tema: "",
+        data: "",
+        horario: "",
+        local: "",
+        palestrante: usuarioNome,
+      });
+      setEditId(null);
+    } catch (error) {
+      console.error("Erro ao salvar palestra: ", error);
+      toast.error("Erro ao salvar palestra.");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, "palestras", id));
+      toast.success("Palestra excluída com sucesso.");
+      if (editId === id) {
+        setForm({
+          tema: "",
+          data: "",
+          horario: "",
+          local: "",
+          palestrante: usuarioNome,
+        });
+        setEditId(null);
+      }
+    } catch (error) {
+      console.error("Erro ao excluir palestra: ", error);
+      toast.error("Erro ao excluir palestra.");
+    }
+  };
 
   return (
-    <div className="max-w-2xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-xl">
-      <div className="mb-8 p-4 bg-gray-50 rounded-lg border">
-        <label htmlFor="role-select" className="block text-sm font-medium text-gray-800 mb-2">
-          Simular login como:
-        </label>
-        <select
-          id="role-select"
-          value={currentUserRole}
-          onChange={(e) => setCurrentUserRole(e.target.value as UserRole)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="administrador">Administrador</option>
-          <option value="organizador">Organizador</option>
-          <option value="palestrante">Palestrante</option>
-          <option value="participante">Participante</option>
-        </select>
-        <p className="text-xs text-gray-600 mt-2">
-          Logado como: <span className="font-semibold text-gray-900">{usuarioNome} ({usuarioEmail})</span>
-        </p>
-      </div>
-
-      <h2 className="text-2xl font-bold mb-6 text-blue-700 text-center">Gerenciar Palestras</h2>
-      {podeEditar ? (
-        <form onSubmit={handleSubmit} className="mb-8 grid grid-cols-1 gap-4">
-          <input name="tema" value={form.tema} onChange={handleChange} required placeholder="Tema" className="px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400" />
-          <input name="data" value={form.data} onChange={handleChange} required placeholder="Data" type="date" className="px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400" />
-          <input name="horario" value={form.horario} onChange={handleChange} required placeholder="Horário" type="time" className="px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400" />
-          <input name="local" value={form.local} onChange={handleChange} required placeholder="Local" className="px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400" />
-          <input name="palestrante" value={form.palestrante} onChange={handleChange} required placeholder="Palestrante responsável" className="px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400" />
-          <button type="submit" className="py-2 px-4 bg-green-600 text-white font-bold rounded hover:bg-green-700 transition-colors duration-300">{editId ? "Salvar edição" : "Adicionar palestra"}</button>
-        </form>
-      ) : (
-        <p className="mb-8 text-center text-gray-500">Apenas organizadores, palestrantes ou administradores podem criar ou editar palestras.</p>
-      )}
-
-
-      <h3 className="text-xl font-bold mb-4 text-blue-700 text-center">
-        Palestras Agendadas
-      </h3>
-      <ul className="divide-y divide-gray-200">
-        {palestras.length === 0 && (
-          <li className="py-4 text-center text-gray-500">
-            Nenhuma palestra cadastrada.
-          </li>
-        )}
-        {palestras.map((p) => {
-          const inscrito = inscricoesUsuario.some((i) => i.palestraId === p.id);
-
-          return (
-            <li
-              key={p.id}
-              className="py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
-            >
-              <div>
-                <span className="font-semibold text-blue-700">{p.tema}</span> <br />
-                <span className="text-sm text-gray-600">{p.data} às {p.horario} | {p.local}</span> <br />
-                <span className="text-sm text-gray-600">Palestrante: {p.palestrante} ({p.palestranteEmail})</span>
-              </div>
-
-              <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
-                {podeEditar &&
-                  (p.palestranteEmail === usuarioEmail ||
-                    papel === "organizador" ||
-                    papel === "administrador") && (
-                    <>
-                      <button
-                        onClick={() => handleEdit(p.id)}
-                        className="px-3 py-1 bg-yellow-400 text-white rounded hover:bg-yellow-500"
-                      >
-                        Editar
-                      </button>
-                      <button
-                        onClick={() => handleDelete(p.id)}
-                        className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
-                      >
-                        Excluir
-                      </button>
-                    </>
-                  )}
-
-                {podeVerRelatorio && (
-                  <button
-                    onClick={() => setModalPalestraId(p.id)}
-                    className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-                  >
-                    Ver Inscritos
-                  </button>
-                )}
-
-                {papel === "participante" && !inscrito && (
-                  <button
-                    onClick={() => handleInscricao(p)}
-                    className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
-                  >
-                    Inscrever-se
-                  </button>
-                )}
-                {papel === "participante" && inscrito && (
-                  <span className="px-3 py-1 bg-gray-200 text-gray-700 rounded-full text-sm font-medium">
-                    Inscrito
-                  </span>
-                )}
-              </div>
-            </li>
-          );
-        })}
-      </ul>
-      {mensagem && (
-        <p className="text-green-600 mt-6 text-center font-semibold">
-          {mensagem}
-        </p>
-      )}
-
-      {modalPalestraId && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
-            <h3 className="text-xl font-bold mb-4">
-              Lista de Presença
-            </h3>
-            <ul className="divide-y max-h-64 overflow-y-auto">
-              {todasInscricoes
-                .filter((i) => i.palestraId === modalPalestraId)
-                .map((inscricao) => (
-                  <li
-                    key={inscricao.id}
-                    className="py-2 flex justify-between items-center"
-                  >
-                    <div>
-                      <span className="font-medium">{inscricao.participante}</span>
-                      <br />
-                      <span className="text-sm text-gray-500">{inscricao.email}</span>
-                    </div>
-                    {inscricao.presente ? (
-                      <span className="px-3 py-1 bg-green-200 text-green-800 rounded-full text-sm font-medium">
-                        Presente
-                      </span>
-                    ) : (
-                      <button
-                        onClick={() => handleMarcarPresenca(inscricao.id)}
-                        className="px-3 py-1 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
-                      >
-                        Marcar Presença
-                      </button>
-                    )}
-                  </li>
-                ))}
-            </ul>
-            <button
-              onClick={() => setModalPalestraId(null)}
-              className="mt-6 w-full py-2 px-4 bg-red-600 text-white rounded hover:bg-red-700"
-            >
-              Fechar
-            </button>
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-secondary/30 to-background">
+      <main className="flex-1 container mx-auto px-4 py-8">
+        <div className="bg-card rounded-xl shadow-lg p-6 mb-8 border border-border">
+          <h2 className="text-xl font-semibold mb-4 text-card-foreground">
+            Visualizar como:
+          </h2>
+          <div className="flex flex-wrap gap-3">
+            {(Object.keys(userProfiles) as UserRole[]).map((role) => (
+              <button
+                key={role}
+                onClick={() => setCurrentUserRole(role)}
+                className={`px-6 py-2.5 rounded-lg font-medium transition-all duration-300 ${currentUserRole === role
+                    ? "bg-primary text-primary-foreground shadow-lg scale-105"
+                    : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                  }`}
+              >
+                {userProfiles[role].name} ({userProfiles[role].role})
+              </button>
+            ))}
           </div>
         </div>
-      )}
+
+        {podeEditar && (
+          <div className="bg-card rounded-xl shadow-lg p-6 mb-8 border border-border">
+            <h2 className="text-2xl font-bold mb-6 text-card-foreground">
+              {editId ? "Editar Palestra" : "Nova Palestra"}
+            </h2>
+            <form
+              onSubmit={handleSubmit}
+              className="grid grid-cols-1 md:grid-cols-2 gap-4"
+            >
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium mb-2 text-card-foreground">
+                  Tema
+                </label>
+                <Input
+                  value={form.tema}
+                  onChange={(e) => setForm({ ...form, tema: e.target.value })}
+                  placeholder="Título da palestra"
+                  required
+                  className="w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2 text-card-foreground">
+                  Data
+                </label>
+                <Input
+                  type="date"
+                  value={form.data}
+                  onChange={(e) => setForm({ ...form, data: e.target.value })}
+                  required
+                  className="w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2 text-card-foreground">
+                  Horário
+                </label>
+                <Input
+                  type="time"
+                  value={form.horario}
+                  onChange={(e) =>
+                    setForm({ ...form, horario: e.target.value })
+                  }
+                  required
+                  className="w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2 text-card-foreground">
+                  Local
+                </label>
+                <Input
+                  value={form.local}
+                  onChange={(e) => setForm({ ...form, local: e.target.value })}
+                  placeholder="Local do evento"
+                  required
+                  className="w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2 text-card-foreground">
+                  Palestrante
+                </label>
+                <Input
+                  value={form.palestrante}
+                  onChange={(e) =>
+                    setForm({ ...form, palestrante: e.target.value })
+                  }
+                  placeholder="Nome do palestrante"
+                  required
+                  className="w-full"
+                />
+              </div>
+              <div className="md:col-span-2 flex gap-3">
+                <Button type="submit" className="flex-1">
+                  {editId ? "Atualizar" : "Criar"} Palestra
+                </Button>
+                {editId && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setEditId(null);
+                      setForm({
+                        tema: "",
+                        data: "",
+                        horario: "",
+                        local: "",
+                        palestrante: usuarioNome,
+                      });
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                )}
+              </div>
+            </form>
+          </div>
+        )}
+
+        <div>
+          <h2 className="text-3xl font-bold mb-6 text-foreground">
+            Palestras Disponíveis
+          </h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {palestras.length === 0 && (
+              <p className="text-muted-foreground lg:col-span-2 text-center">
+                Nenhuma palestra cadastrada no momento.
+              </p>
+            )}
+            {palestras.map((palestra) => {
+              const jaInscrito = inscricoesUsuario.some(
+                (i) => i.palestraId === palestra.id
+              );
+              const podeModificar =
+                palestra.palestranteEmail === usuarioEmail ||
+                papel === "organizador" ||
+                papel === "administrador";
+
+              return (
+                <div
+                  key={palestra.id}
+                  className="bg-card rounded-xl shadow-lg p-6 border border-border hover:shadow-xl transition-shadow duration-300"
+                >
+                  <h3 className="text-xl font-bold text-card-foreground mb-3">
+                    {palestra.tema}
+                  </h3>
+                  <div className="space-y-2 mb-4 text-muted-foreground">
+                    <p className="flex items-center">
+                      <span className="font-medium mr-2">📅</span>
+                      {new Date(
+                        palestra.data + "T00:00"
+                      ).toLocaleDateString("pt-BR", { timeZone: "UTC" })}
+                    </p>
+                    <p className="flex items-center">
+                      <span className="font-medium mr-2">🕐</span>
+                      {palestra.horario}
+                    </p>
+                    <p className="flex items-center">
+                      <span className="font-medium mr-2">📍</span>
+                      {palestra.local}
+                    </p>
+                    <p className="flex items-center">
+                      <span className="font-medium mr-2">👤</span>
+                      {palestra.palestrante} ({palestra.palestranteEmail})
+                    </p>
+                  </div>
+
+                  <div className="flex gap-2 flex-wrap">
+                    {papel === "participante" &&
+                      (jaInscrito ? (
+                        <Button
+                          variant="outline"
+                          onClick={() => handleCancelarInscricao(palestra.id)}
+                          className="flex-1"
+                        >
+                          Cancelar Inscrição
+                        </Button>
+                      ) : (
+                        <Button
+                          onClick={() => handleInscrever(palestra)}
+                          className="flex-1"
+                        >
+                          Inscrever-se
+                        </Button>
+                      ))}
+
+                    {podeEditar && podeModificar && (
+                      <>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setForm({
+                              tema: palestra.tema,
+                              data: palestra.data,
+                              horario: palestra.horario,
+                              local: palestra.local,
+                              palestrante: palestra.palestrante,
+                            });
+                            setEditId(palestra.id);
+                            window.scrollTo({ top: 0, behavior: "smooth" });
+                          }}
+                          className="flex-1"
+                        >
+                          Editar
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          onClick={() => handleDelete(palestra.id)}
+                          className="flex-1"
+                        >
+                          Excluir
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </main>
     </div>
   );
 }
