@@ -40,16 +40,14 @@ const userProfiles = {
 type UserRole = keyof typeof userProfiles;
 
 export default function Relatorios() {
-  const [currentUserRole, setCurrentUserRole] =
-    useState<UserRole>("administrador");
+  const [currentUserRole, setCurrentUserRole] = useState<UserRole>("administrador");
   const { role: papel } = userProfiles[currentUserRole];
-
   const [palestras, setPalestras] = useState<Palestra[]>([]);
   const [inscricoes, setInscricoes] = useState<Inscricao[]>([]);
   const [loading, setLoading] = useState(true);
-
   const podeVerRelatorio = papel === "organizador" || papel === "administrador";
 
+  // Carregar dados de palestras e inscrições
   useEffect(() => {
     if (!podeVerRelatorio) {
       setLoading(false);
@@ -67,7 +65,6 @@ export default function Relatorios() {
         setPalestras(palestrasData);
       }
     );
-
     const unsubInscricoes = onSnapshot(
       collection(db, "inscricoes"),
       (snapshot) => {
@@ -158,8 +155,8 @@ export default function Relatorios() {
                 key={role}
                 onClick={() => setCurrentUserRole(role)}
                 className={`px-6 py-2.5 rounded-lg font-medium transition-all duration-300 ${currentUserRole === role
-                    ? "bg-primary text-primary-foreground shadow-lg scale-105"
-                    : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                  ? "bg-primary text-primary-foreground shadow-lg scale-105"
+                  : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
                   }`}
               >
                 {userProfiles[role].name}
@@ -248,10 +245,10 @@ export default function Relatorios() {
                       <td className="py-4 px-4 text-center">
                         <span
                           className={`inline-block px-3 py-1 rounded-full font-semibold ${parseFloat(rel.percentual) >= 70
-                              ? "bg-success/20 text-success"
-                              : parseFloat(rel.percentual) >= 40
-                                ? "bg-accent/20 text-accent"
-                                : "bg-destructive/20 text-destructive"
+                            ? "bg-success/20 text-success"
+                            : parseFloat(rel.percentual) >= 40
+                              ? "bg-accent/20 text-accent"
+                              : "bg-destructive/20 text-destructive"
                             }`}
                         >
                           {rel.percentual}%

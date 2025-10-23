@@ -69,6 +69,7 @@ const userProfiles: Record<ProfileKey, User> = {
   }
 };
 
+//Componente - Painel do Administrador
 const AdminPanel = ({ users, setUsers }: { users: User[]; setUsers: React.Dispatch<React.SetStateAction<User[]>>; }) => {
   const [newUser, setNewUser] = React.useState({ name: "", email: "", role: "organizador" as UserRole });
 
@@ -134,6 +135,7 @@ const AdminPanel = ({ users, setUsers }: { users: User[]; setUsers: React.Dispat
   );
 };
 
+//Componente - Dashboard do Palestrante
 const PalestranteDashboard = ({ minhasPalestras }: { minhasPalestras: Palestra[]; }) => {
   return (
     <div className="bg-card rounded-xl shadow-md p-6 mb-8 border border-border">
@@ -173,6 +175,7 @@ const PalestranteDashboard = ({ minhasPalestras }: { minhasPalestras: Palestra[]
   );
 };
 
+//Componente - Modal de Relatório de Presença
 const RelatorioPresencaModal = ({ palestra, onClose }: { palestra: Palestra; onClose: () => void; }) => {
   const [inscritos, setInscritos] = React.useState<Inscricao[]>([]);
 
@@ -240,6 +243,7 @@ export default function PalestrasApp() {
   const [editId, setEditId] = React.useState<string | null>(null);
   const podeGerenciar = papel === "organizador" || papel === "administrador";
 
+  //Função para preencher o campo palestrante automaticamente
   React.useEffect(() => {
     if (!editId && (papel === "palestrante" || podeGerenciar)) {
       setForm((prev) => ({ ...prev, palestrante: usuarioNome }));
@@ -248,6 +252,7 @@ export default function PalestrasApp() {
     }
   }, [usuarioNome, papel, podeGerenciar, editId]);
 
+  //Carregar palestras do Firestore
   React.useEffect(() => {
     setLoading(true);
     const q = query(collection(db, "palestras"));
@@ -267,6 +272,7 @@ export default function PalestrasApp() {
     return () => unsubscribe();
   }, []);
 
+  //Carregar inscrições do usuário atual
   React.useEffect(() => {
     if (!usuarioEmail) {
       setInscricoesUsuario([]);
@@ -285,6 +291,7 @@ export default function PalestrasApp() {
     return () => unsubscribe();
   }, [usuarioEmail, papel]);
 
+  //Função para inscrever em uma palestra
   const handleInscrever = async (palestra: Palestra) => {
     if (!usuarioNome || !usuarioEmail) return;
     if (palestra.inscritos >= palestra.vagas) {
@@ -313,6 +320,7 @@ export default function PalestrasApp() {
     }
   };
 
+  //Função para cancelar inscrição  
   const handleCancelarInscricao = async (palestraId: string) => {
     const inscricao = inscricoesUsuario.find(
       (i) => i.palestraId === palestraId
@@ -331,6 +339,7 @@ export default function PalestrasApp() {
     }
   };
 
+  //Função para criar ou editar palestra
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!podeGerenciar && papel !== "palestrante") return;
@@ -359,6 +368,7 @@ export default function PalestrasApp() {
     }
   };
 
+  //Função para excluir palestra
   const handleDelete = async (id: string) => {
     try {
       const inscricoesQuery = query(
@@ -388,6 +398,7 @@ export default function PalestrasApp() {
     }
   };
 
+  //Função para emitir certificado
   const handleEmitirCertificado = (palestraTema: string) => {
     toast.success(
       `Certificado para "${palestraTema}" emitido e enviado para seu e-mail!`
