@@ -262,6 +262,23 @@ const InscricaoModal = ({ palestra, open, onClose, onConfirm, inscrevendo }: {
   );
 };
 
+// Modal de confirmação de exclusão de palestra
+const ConfirmDeleteModal = ({ open, onClose, onConfirm }: { open: boolean; onClose: () => void; onConfirm: () => void; }) => {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+      <div className="bg-card rounded-xl shadow-2xl p-6 w-full max-w-sm border border-border">
+        <h2 className="text-xl font-bold mb-4">Confirmar Exclusão</h2>
+        <p className="mb-6 text-muted-foreground">Tem certeza que deseja excluir esta palestra? Esta ação não poderá ser desfeita.</p>
+        <div className="flex gap-2 justify-end">
+          <Button variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button variant="destructive" onClick={onConfirm}>Excluir</Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function PalestrasApp() {
   const [allUsers, setAllUsers] = React.useState<User[]>(Object.values(userProfiles));
   const [currentUser, setCurrentUser] = React.useState<User>(userProfiles.participante);
@@ -276,6 +293,8 @@ export default function PalestrasApp() {
   const [editId, setEditId] = React.useState<string | null>(null);
   const [modalInscricao, setModalInscricao] = useState<Palestra | null>(null);
   const [inscrevendo, setInscrevendo] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [palestraParaExcluir, setPalestraParaExcluir] = useState<string | null>(null);
   const podeGerenciar = papel === "organizador" || papel === "administrador";
   const pathname = usePathname();
 
@@ -384,6 +403,49 @@ export default function PalestrasApp() {
     }
   };
 
+  // Função para cancelar inscrição
+  const handleCancelarInscricao = async (palestraId: string) => {
+    const inscricao = inscricoesUsuario.find((i) => i.palestraId === palestraId);
+    if (!inscricao) return;
+    try {
+      await deleteDoc(doc(db, "inscricoes", inscricao.id));
+      const palestraRef = doc(db, "palestras", palestraId);
+      await updateDoc(palestraRef, {
+        inscritos: increment(-1),
+      });
+      toast.info("Inscrição cancelada");
+    } catch (error) {
+      toast.error("Erro ao tentar cancelar inscrição.");
+    }
+  };
+
+  // Função para excluir palestra
+  const handleDelete = async (id: string) => {
+    try {
+      const inscricoesQuery = query(
+        collection(db, "inscricoes"),
+        where("palestraId", "==", id)
+      );
+      const inscricoesSnapshot = await getDocs(inscricoesQuery);
+      if (!inscricoesSnapshot.empty) {
+        const batch = writeBatch(db);
+        inscricoesSnapshot.forEach((doc) => {
+          batch.delete(doc.ref);
+        });
+        await batch.commit();
+        toast.info("Inscrições associadas removidas.");
+      }
+      await deleteDoc(doc(db, "palestras", id));
+      toast.success("Palestra excluída com sucesso.");
+      if (editId === id) {
+        setForm(initialFormState);
+        setEditId(null);
+      }
+    } catch (error) {
+      toast.error("Erro ao excluir palestra.");
+    }
+  };
+
   // Abrir modal automaticamente se a URL for /palestra/[id]
   useEffect(() => {
     const match = pathname.match(/^\/palestra\/(.+)$/);
@@ -394,11 +456,31 @@ export default function PalestrasApp() {
     }
   }, [pathname, palestras]);
 
+  // Nova função para abrir modal de confirmação
+  const handleAbrirModalDelete = (id: string) => {
+    setPalestraParaExcluir(id);
+    setDeleteModalOpen(true);
+  };
+
+  // Nova função para confirmar exclusão
+  const handleConfirmarDelete = async () => {
+    if (palestraParaExcluir) {
+      await handleDelete(palestraParaExcluir);
+      setDeleteModalOpen(false);
+      setPalestraParaExcluir(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background font-sans">
       {modalRelatorio && (
         <RelatorioPresencaModal palestra={modalRelatorio} onClose={() => setModalRelatorio(null)} />
       )}
+      <ConfirmDeleteModal
+        open={deleteModalOpen}
+        onClose={() => { setDeleteModalOpen(false); setPalestraParaExcluir(null); }}
+        onConfirm={handleConfirmarDelete}
+      />
       <InscricaoModal
         palestra={modalInscricao}
         open={!!modalInscricao}
@@ -577,7 +659,7 @@ export default function PalestrasApp() {
                               <Button variant="outline" onClick={() => { setForm({ ...palestra, vagas: palestra.vagas || 30 }); setEditId(palestra.id); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="flex-1">
                                 Editar
                               </Button>
-                              <Button variant="destructive" onClick={() => handleDelete(palestra.id)} className="flex-1"> Excluir </Button>
+                              <Button variant="destructive" onClick={() => handleAbrirModalDelete(palestra.id)} className="flex-1"> Excluir </Button>
                             </>
                           )}
                         </div>
