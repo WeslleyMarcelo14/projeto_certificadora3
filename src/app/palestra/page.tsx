@@ -10,6 +10,8 @@ import { Label } from "../../components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { toast } from "sonner";
 import { CalendarIcon, ClockIcon, MapPinIcon, UserIcon, UsersIcon, CheckCircleIcon, AwardIcon, UploadIcon, ShieldIcon } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
+import { usePathname } from "next/navigation";
 
 type Palestra = {
   id: string;
@@ -229,6 +231,37 @@ const RelatorioPresencaModal = ({ palestra, onClose }: { palestra: Palestra; onC
   );
 };
 
+// Modal de Detalhes da Palestra para inscrição
+const InscricaoModal = ({ palestra, open, onClose, onConfirm, inscrevendo }: {
+  palestra: Palestra | null;
+  open: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  inscrevendo: boolean;
+}) => {
+  if (!open || !palestra) return null;
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+      <div className="bg-card rounded-xl shadow-2xl p-6 w-full max-w-md border border-border">
+        <h2 className="text-2xl font-bold mb-4">{palestra.tema}</h2>
+        <div className="space-y-2 mb-6 text-muted-foreground">
+          <p className="flex items-center"><CalendarIcon className="h-4 w-4 mr-2" /> {new Date(palestra.data + "T00:00").toLocaleDateString("pt-BR", { timeZone: "UTC" })}</p>
+          <p className="flex items-center"><ClockIcon className="h-4 w-4 mr-2" /> {palestra.horario}</p>
+          <p className="flex items-center"><MapPinIcon className="h-4 w-4 mr-2" /> {palestra.local}</p>
+          <p className="flex items-center"><UserIcon className="h-4 w-4 mr-2" /> {palestra.palestrante}</p>
+          <p className="flex items-center"><UsersIcon className="h-4 w-4 mr-2" /> {palestra.inscritos} / {palestra.vagas} vagas</p>
+        </div>
+        <div className="flex gap-2 justify-end">
+          <Button variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button onClick={onConfirm} disabled={inscrevendo || palestra.inscritos >= palestra.vagas}>
+            {palestra.inscritos >= palestra.vagas ? "Vagas Esgotadas" : inscrevendo ? "Inscrevendo..." : "Confirmar Inscrição"}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function PalestrasApp() {
   const [allUsers, setAllUsers] = React.useState<User[]>(Object.values(userProfiles));
   const [currentUser, setCurrentUser] = React.useState<User>(userProfiles.participante);
@@ -241,7 +274,10 @@ export default function PalestrasApp() {
   const initialFormState = { tema: "", data: "", horario: "", local: "", palestrante: "", vagas: 30 };
   const [form, setForm] = React.useState(initialFormState);
   const [editId, setEditId] = React.useState<string | null>(null);
+  const [modalInscricao, setModalInscricao] = useState<Palestra | null>(null);
+  const [inscrevendo, setInscrevendo] = useState(false);
   const podeGerenciar = papel === "organizador" || papel === "administrador";
+  const pathname = usePathname();
 
   //Função para preencher o campo palestrante automaticamente
   React.useEffect(() => {
@@ -291,126 +327,57 @@ export default function PalestrasApp() {
     return () => unsubscribe();
   }, [usuarioEmail, papel]);
 
-  //Função para inscrever em uma palestra
-  const handleInscrever = async (palestra: Palestra) => {
-    if (!usuarioNome || !usuarioEmail) return;
-    if (palestra.inscritos >= palestra.vagas) {
-      toast.error("Vagas esgotadas!");
-      return;
-    }
-    if (inscricoesUsuario.some((i) => i.palestraId === palestra.id)) {
-      toast.error("Você já está inscrito.");
-      return;
-    }
+  //Nova função para abrir modal de inscrição
+  const handleAbrirModalInscricao = (palestra: Palestra) => {
+    setModalInscricao(palestra);
+  };
+
+  // Nova função para confirmar inscrição no modal
+  const handleConfirmarInscricao = async () => {
+    if (!modalInscricao || !usuarioNome || !usuarioEmail) return;
+    setInscrevendo(true);
     try {
       await addDoc(collection(db, "inscricoes"), {
-        palestraId: palestra.id,
+        palestraId: modalInscricao.id,
         participante: usuarioNome,
         email: usuarioEmail,
         presente: false,
       });
-      const palestraRef = doc(db, "palestras", palestra.id);
+      const palestraRef = doc(db, "palestras", modalInscricao.id);
       await updateDoc(palestraRef, {
         inscritos: increment(1),
       });
-      toast.success(`Inscrição realizada em "${palestra.tema}"!`);
+      toast.success(`Inscrição realizada em "${modalInscricao.tema}"!`);
+      setModalInscricao(null);
     } catch (error) {
-      console.error("Erro ao inscrever: ", error);
       toast.error("Erro ao tentar realizar inscrição.");
+    } finally {
+      setInscrevendo(false);
     }
   };
 
-  //Função para cancelar inscrição  
-  const handleCancelarInscricao = async (palestraId: string) => {
-    const inscricao = inscricoesUsuario.find(
-      (i) => i.palestraId === palestraId
-    );
-    if (!inscricao) return;
-    try {
-      await deleteDoc(doc(db, "inscricoes", inscricao.id));
-      const palestraRef = doc(db, "palestras", palestraId);
-      await updateDoc(palestraRef, {
-        inscritos: increment(-1),
-      });
-      toast.info("Inscrição cancelada");
-    } catch (error) {
-      console.error("Erro ao cancelar inscrição: ", error);
-      toast.error("Erro ao tentar cancelar inscrição.");
+  // Abrir modal automaticamente se a URL for /palestra/[id]
+  useEffect(() => {
+    const match = pathname.match(/^\/palestra\/(.+)$/);
+    if (match && palestras.length > 0) {
+      const palestraId = match[1];
+      const palestra = palestras.find((p) => p.id === palestraId);
+      if (palestra) setModalInscricao(palestra);
     }
-  };
-
-  //Função para criar ou editar palestra
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!podeGerenciar && papel !== "palestrante") return;
-    try {
-      if (editId) {
-        const palestraRef = doc(db, "palestras", editId);
-        await updateDoc(palestraRef, {
-          ...form,
-          vagas: Number(form.vagas),
-        });
-        toast.success("Palestra atualizada!");
-      } else {
-        await addDoc(collection(db, "palestras"), {
-          ...form,
-          vagas: Number(form.vagas),
-          inscritos: 0,
-          palestranteEmail: usuarioEmail,
-        });
-        toast.success("Palestra criada!");
-      }
-      setForm(initialFormState);
-      setEditId(null);
-    } catch (error) {
-      console.error("Erro ao salvar palestra: ", error);
-      toast.error("Erro ao salvar palestra.");
-    }
-  };
-
-  //Função para excluir palestra
-  const handleDelete = async (id: string) => {
-    try {
-      const inscricoesQuery = query(
-        collection(db, "inscricoes"),
-        where("palestraId", "==", id)
-      );
-      const inscricoesSnapshot = await getDocs(inscricoesQuery);
-
-      if (!inscricoesSnapshot.empty) {
-        const batch = writeBatch(db);
-        inscricoesSnapshot.forEach((doc) => {
-          batch.delete(doc.ref);
-        });
-        await batch.commit();
-        toast.info("Inscrições associadas removidas.");
-      }
-
-      await deleteDoc(doc(db, "palestras", id));
-      toast.success("Palestra excluída com sucesso.");
-      if (editId === id) {
-        setForm(initialFormState);
-        setEditId(null);
-      }
-    } catch (error) {
-      console.error("Erro ao excluir palestra: ", error);
-      toast.error("Erro ao excluir palestra.");
-    }
-  };
-
-  //Função para emitir certificado
-  const handleEmitirCertificado = (palestraTema: string) => {
-    toast.success(
-      `Certificado para "${palestraTema}" emitido e enviado para seu e-mail!`
-    );
-  };
+  }, [pathname, palestras]);
 
   return (
     <div className="min-h-screen bg-background font-sans">
       {modalRelatorio && (
         <RelatorioPresencaModal palestra={modalRelatorio} onClose={() => setModalRelatorio(null)} />
       )}
-
+      <InscricaoModal
+        palestra={modalInscricao}
+        open={!!modalInscricao}
+        onClose={() => setModalInscricao(null)}
+        onConfirm={handleConfirmarInscricao}
+        inscrevendo={inscrevendo}
+      />
       <main className="container mx-auto px-4 py-8">
         <header className="mb-8">
           <h1 className="text-4xl text-center font-bold text-foreground"> Sistema de Gestão de Palestras </h1>
@@ -512,34 +479,49 @@ export default function PalestrasApp() {
 
                     return (
                       <div key={palestra.id} className="bg-card rounded-xl shadow-lg p-6 border border-border hover:shadow-xl hover:border-primary/30 transition-all duration-300 flex flex-col">
-                        <div className="flex-grow">
-                          <h3 className="text-xl font-bold text-card-foreground mb-3">
-                            {palestra.tema}
-                          </h3>
-                          <div className="space-y-2 mb-4 text-muted-foreground">
-                            <p className="flex items-center">
-                              <CalendarIcon className="h-4 w-4 mr-2" />{new Date(palestra.data + "T00:00").toLocaleDateString("pt-BR", { timeZone: "UTC", })}
-                            </p>
-                            <p className="flex items-center">
-                              <ClockIcon className="h-4 w-4 mr-2" />{palestra.horario}
-                            </p>
-                            <p className="flex items-center">
-                              <MapPinIcon className="h-4 w-4 mr-2" />{palestra.local}
-                            </p>
-                            <p className="flex items-center">
-                              <UserIcon className="h-4 w-4 mr-2" />{palestra.palestrante}
-                            </p>
-                            <p className="flex items-center">
-                              <UsersIcon className="h-4 w-4 mr-2" />{palestra.inscritos} / {palestra.vagas} vagas
-                            </p>
-                            {jaInscrito && (
-                              <p className="flex items-center font-semibold text-green-600">
-                                <CheckCircleIcon className="h-5 w-5 mr-2" /> Você está inscrito!
+                        <div className="flex flex-row gap-4 flex-grow">
+                          <div className="flex-1">
+                            <h3 className="text-xl font-bold text-card-foreground mb-3">
+                              {palestra.tema}
+                            </h3>
+                            <div className="space-y-2 mb-4 text-muted-foreground">
+                              <p className="flex items-center">
+                                <CalendarIcon className="h-4 w-4 mr-2" />{new Date(palestra.data + "T00:00").toLocaleDateString("pt-BR", { timeZone: "UTC", })}
                               </p>
-                            )}
+                              <p className="flex items-center">
+                                <ClockIcon className="h-4 w-4 mr-2" />{palestra.horario}
+                              </p>
+                              <p className="flex items-center">
+                                <MapPinIcon className="h-4 w-4 mr-2" />{palestra.local}
+                              </p>
+                              <p className="flex items-center">
+                                <UserIcon className="h-4 w-4 mr-2" />{palestra.palestrante}
+                              </p>
+                              <p className="flex items-center">
+                                <UsersIcon className="h-4 w-4 mr-2" />{palestra.inscritos} / {palestra.vagas} vagas
+                              </p>
+                              {jaInscrito && (
+                                <p className="flex items-center font-semibold text-green-600">
+                                  <CheckCircleIcon className="h-5 w-5 mr-2" /> Você está inscrito!
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          {/* QR Code para visualização da palestra à direita */}
+                          <div className="flex flex-col items-center justify-center min-w-[120px]">
+                            <a href={`${typeof window !== "undefined" ? window.location.origin : ""}/palestra/${palestra.id}`} target="_self" rel="noopener noreferrer">
+                              <QRCodeSVG
+                                value={`${typeof window !== "undefined" ? window.location.origin : ""}/palestra/${palestra.id}`}
+                                size={96}
+                                bgColor="#fff"
+                                fgColor="#000"
+                                level="Q"
+                                includeMargin={true}
+                              />
+                            </a>
+                            <span className="text-xs text-muted-foreground mt-2 text-center">Escaneie ou clique para visualizar</span>
                           </div>
                         </div>
-
                         <div className="flex gap-2 flex-wrap mt-auto pt-4 border-t border-border/50">
                           {papel === "participante" &&
                             (jaInscrito ? (
@@ -550,7 +532,7 @@ export default function PalestrasApp() {
                                 </Button>
                               </>
                             ) : (
-                              <Button onClick={() => handleInscrever(palestra)} className="flex-1" disabled={vagasEsgotadas}>
+                              <Button onClick={() => handleAbrirModalInscricao(palestra)} className="flex-1" disabled={vagasEsgotadas}>
                                 {vagasEsgotadas ? "Vagas Esgotadas" : "Inscrever-se"}
                               </Button>
                             ))}
