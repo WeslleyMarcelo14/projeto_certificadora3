@@ -75,25 +75,25 @@ type ProfileKey = UserRole;
 const userProfiles: Record<ProfileKey, User> = {
   administrador: {
     id: "user1",
-    name: "Henry",
+    name: "Admin Joana",
     email: "admin@aaaaaaa.com",
     role: "administrador",
   },
   organizador: {
     id: "user2",
-    name: "Organizador",
+    name: "Organizador Henry",
     email: "organizador@gmail.com",
     role: "organizador",
   },
   palestrante: {
     id: "user3",
-    name: "Maria",
+    name: "Palestrante Maria",
     email: "palestrante@gmail.com",
     role: "palestrante",
   },
   participante: {
     id: "user4",
-    name: "João",
+    name: "Participante João",
     email: "participante@gmail.com",
     role: "participante",
   },
@@ -408,8 +408,8 @@ const InscricaoModal = ({
             {palestra.inscritos >= palestra.vagas
               ? "Vagas Esgotadas"
               : inscrevendo
-              ? "Inscrevendo..."
-              : "Confirmar Inscrição"}
+                ? "Inscrevendo..."
+                : "Confirmar Inscrição"}
           </Button>
         </div>
       </div>
@@ -502,12 +502,12 @@ export default function PalestrasApp() {
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const palestrasData: Palestra[] = querySnapshot.docs.map(
         (docSnap) =>
-          ({
-            ...docSnap.data(),
-            id: docSnap.id,
-            inscritos: docSnap.data().inscritos || 0,
-            vagas: docSnap.data().vagas || 0,
-          } as Palestra)
+        ({
+          ...docSnap.data(),
+          id: docSnap.id,
+          inscritos: docSnap.data().inscritos || 0,
+          vagas: docSnap.data().vagas || 0,
+        } as Palestra)
       );
       setPalestras(palestrasData);
       setLoading(false);
@@ -603,6 +603,15 @@ export default function PalestrasApp() {
       toast.error("Erro ao tentar cancelar inscrição.");
     }
   };
+
+  //Emitir certificado
+  const handleEmitirCertificado = (tema: string) => {
+    toast.success("Certificado Emitido!", {
+      description: `Parabéns! Seu certificado para a palestra "${tema}" foi gerado com sucesso.`,
+      icon: <AwardIcon className="h-5 w-5" />,
+    });
+  };
+
 
   //Excluir palestra
   const handleDelete = async (id: string) => {
@@ -711,9 +720,8 @@ export default function PalestrasApp() {
                     setModalRelatorio(null);
                   }}
                   variant={currentUser.id === user.id ? "default" : "secondary"}
-                  className={`transition-all duration-300 transform ${
-                    currentUser.id === user.id ? "scale-105 shadow-lg" : ""
-                  }`}
+                  className={`transition-all duration-300 transform ${currentUser.id === user.id ? "scale-105 shadow-lg" : ""
+                    }`}
                 >
                   {user.name}
                 </Button>
@@ -929,20 +937,18 @@ export default function PalestrasApp() {
                             {/* QR Code */}
                             <div className="flex flex-col items-center justify-center min-w-[120px]">
                               <a
-                                href={`${
-                                  typeof window !== "undefined"
+                                href={`${typeof window !== "undefined"
                                     ? window.location.origin
                                     : ""
-                                }/palestra/${palestra.id}`}
+                                  }/palestra/${palestra.id}`}
                                 target="_self"
                                 rel="noopener noreferrer"
                               >
                                 <QRCodeSVG
-                                  value={`${
-                                    typeof window !== "undefined"
+                                  value={`${typeof window !== "undefined"
                                       ? window.location.origin
                                       : ""
-                                  }/palestra/${palestra.id}`}
+                                    }/palestra/${palestra.id}`}
                                   size={96}
                                   bgColor="#fff"
                                   fgColor="#000"
@@ -1045,6 +1051,3 @@ export default function PalestrasApp() {
     </div>
   );
 }
-
-// OBS: a função handleEmitirCertificado é referenciada no código original.
-// Garanta que ela exista no seu projeto ou substitua a chamada conforme necessário.

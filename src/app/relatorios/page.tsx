@@ -16,12 +16,12 @@ type Inscricao = {
 
 const userProfiles = {
   administrador: {
-    name: "Admin Henry",
+    name: "Admin Joana",
     email: "admin@aaaaaaa.com",
     role: "administrador",
   },
   organizador: {
-    name: "Organizador",
+    name: "Organizador Henry",
     email: "organizador@gmail.com",
     role: "organizador",
   },
