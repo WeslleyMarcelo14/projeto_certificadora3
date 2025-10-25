@@ -356,6 +356,34 @@ export default function PalestrasApp() {
     }
   };
 
+  //Função para criar ou editar palestra
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!podeGerenciar && papel !== "palestrante") return;
+    try {
+      if (editId) {
+        const palestraRef = doc(db, "palestras", editId);
+        await updateDoc(palestraRef, {
+          ...form,
+          vagas: Number(form.vagas),
+        });
+        toast.success("Palestra atualizada!");
+      } else {
+        await addDoc(collection(db, "palestras"), {
+          ...form,
+          vagas: Number(form.vagas),
+          inscritos: 0,
+          palestranteEmail: usuarioEmail,
+        });
+        toast.success("Palestra criada!");
+      }
+      setForm(initialFormState);
+      setEditId(null);
+    } catch (error) {
+      toast.error("Erro ao salvar palestra.");
+    }
+  };
+
   // Abrir modal automaticamente se a URL for /palestra/[id]
   useEffect(() => {
     const match = pathname.match(/^\/palestra\/(.+)$/);
@@ -390,7 +418,14 @@ export default function PalestrasApp() {
           </h2>
           <div className="flex flex-wrap gap-3">
             {allUsers.map((user) => (
-              <Button key={user.id} onClick={() => { setCurrentUser(user); setView("palestras"); setEditId(null); }} variant={currentUser.id === user.id ? "default" : "secondary"} className={`transition-all duration-300 transform ${currentUser.id === user.id ? "scale-105 shadow-lg" : "" }`} >
+              <Button key={user.id} onClick={() => {
+                setCurrentUser(user);
+                setView("palestras");
+                setEditId(null);
+                setForm(initialFormState);
+                setModalInscricao(null);
+                setModalRelatorio(null);
+              }} variant={currentUser.id === user.id ? "default" : "secondary"} className={`transition-all duration-300 transform ${currentUser.id === user.id ? "scale-105 shadow-lg" : "" }`} >
                 {user.name}
               </Button>
             ))}
