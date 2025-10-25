@@ -8,7 +8,6 @@ export default function Footer() {
           <p className="font-semibold text-lg">&copy; {new Date().getFullYear()} Projeto Certificadora 3</p>
           <p className="text-primary-foreground/80 mt-1">Meninas Digitais - UTFPR-CP</p>
         </div>
-
         <div className="flex items-center space-x-6">
           <a 
             href="https://github.com/WeslleyMarcelo14/projeto_certificadora3" 

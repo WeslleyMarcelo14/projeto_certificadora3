@@ -2,14 +2,42 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { db } from "../firebase/page";
-import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc, increment, getDocs, writeBatch } from "firebase/firestore";
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  increment,
+  getDocs,
+  writeBatch,
+} from "firebase/firestore";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Checkbox } from "../../components/ui/checkbox";
 import { Label } from "../../components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/select";
 import { toast } from "sonner";
-import { CalendarIcon, ClockIcon, MapPinIcon, UserIcon, UsersIcon, CheckCircleIcon, AwardIcon, UploadIcon, ShieldIcon } from "lucide-react";
+import {
+  CalendarIcon,
+  ClockIcon,
+  MapPinIcon,
+  UserIcon,
+  UsersIcon,
+  CheckCircleIcon,
+  AwardIcon,
+  UploadIcon,
+  ShieldIcon,
+} from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { usePathname } from "next/navigation";
 
@@ -68,14 +96,29 @@ const userProfiles: Record<ProfileKey, User> = {
     name: "João",
     email: "participante@gmail.com",
     role: "participante",
-  }
+  },
 };
 
 //Componente - Painel do Administrador
-const AdminPanel = ({ users, setUsers }: { users: User[]; setUsers: React.Dispatch<React.SetStateAction<User[]>>; }) => {
-  const [newUser, setNewUser] = React.useState({ name: "", email: "", role: "organizador" as UserRole });
+const AdminPanel = ({
+  users,
+  setUsers,
+}: {
+  users: User[];
+  setUsers: React.Dispatch<React.SetStateAction<User[]>>;
+}) => {
+  const [newUser, setNewUser] = React.useState({
+    name: "",
+    email: "",
+    role: "organizador" as UserRole,
+  });
 
-  const handleRoleChange = (userId: string, newRole: UserRole) => { setUsers(users.map((u) => (u.id === userId ? { ...u, role: newRole } : u))); toast.success(`Papel de ${users.find((u) => u.id === userId)?.name} atualizado!`) };
+  const handleRoleChange = (userId: string, newRole: UserRole) => {
+    setUsers(users.map((u) => (u.id === userId ? { ...u, role: newRole } : u)));
+    toast.success(
+      `Papel de ${users.find((u) => u.id === userId)?.name} atualizado!`
+    );
+  };
 
   const handleAddUser = (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,12 +138,20 @@ const AdminPanel = ({ users, setUsers }: { users: User[]; setUsers: React.Dispat
           <h3 className="font-semibold text-lg mb-3">Gerenciar Usuários</h3>
           <div className="space-y-3">
             {users.map((user) => (
-              <div key={user.id} className="flex items-center justify-between p-2 bg-secondary rounded-md">
+              <div
+                key={user.id}
+                className="flex items-center justify-between p-2 bg-secondary rounded-md"
+              >
                 <div>
                   <p className="font-medium">{user.name}</p>
                   <p className="text-sm text-muted-foreground">{user.email}</p>
                 </div>
-                <Select value={user.role} onValueChange={(value) => handleRoleChange(user.id, value as UserRole)}>
+                <Select
+                  value={user.role}
+                  onValueChange={(value) =>
+                    handleRoleChange(user.id, value as UserRole)
+                  }
+                >
                   <SelectTrigger className="w-40">
                     <SelectValue placeholder="Definir papel" />
                   </SelectTrigger>
@@ -116,11 +167,33 @@ const AdminPanel = ({ users, setUsers }: { users: User[]; setUsers: React.Dispat
           </div>
         </div>
         <div>
-          <h3 className="font-semibold text-lg mb-3"> Adicionar Organizador/Palestrante </h3>
+          <h3 className="font-semibold text-lg mb-3">
+            Adicionar Organizador/Palestrante
+          </h3>
           <form onSubmit={handleAddUser} className="space-y-3">
-            <Input placeholder="Nome Completo" value={newUser.name} onChange={(e) => setNewUser({ ...newUser, name: e.target.value })} required />
-            <Input type="email" placeholder="Email" value={newUser.email} onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} required />
-            <Select value={newUser.role} onValueChange={(value) => setNewUser({ ...newUser, role: value as UserRole })}>
+            <Input
+              placeholder="Nome Completo"
+              value={newUser.name}
+              onChange={(e) =>
+                setNewUser({ ...newUser, name: e.target.value })
+              }
+              required
+            />
+            <Input
+              type="email"
+              placeholder="Email"
+              value={newUser.email}
+              onChange={(e) =>
+                setNewUser({ ...newUser, email: e.target.value })
+              }
+              required
+            />
+            <Select
+              value={newUser.role}
+              onValueChange={(value) =>
+                setNewUser({ ...newUser, role: value as UserRole })
+              }
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Definir papel" />
               </SelectTrigger>
@@ -129,7 +202,9 @@ const AdminPanel = ({ users, setUsers }: { users: User[]; setUsers: React.Dispat
                 <SelectItem value="palestrante">Palestrante</SelectItem>
               </SelectContent>
             </Select>
-            <Button type="submit" className="w-full"> Adicionar Usuário </Button>
+            <Button type="submit" className="w-full">
+              Adicionar Usuário
+            </Button>
           </form>
         </div>
       </div>
@@ -138,26 +213,43 @@ const AdminPanel = ({ users, setUsers }: { users: User[]; setUsers: React.Dispat
 };
 
 //Componente - Dashboard do Palestrante
-const PalestranteDashboard = ({ minhasPalestras }: { minhasPalestras: Palestra[]; }) => {
+const PalestranteDashboard = ({
+  minhasPalestras,
+}: {
+  minhasPalestras: Palestra[];
+}) => {
   return (
     <div className="bg-card rounded-xl shadow-md p-6 mb-8 border border-border">
-      <h2 className="text-2xl font-bold mb-6 text-card-foreground"> Minhas Palestras </h2>
+      <h2 className="text-2xl font-bold mb-6 text-card-foreground">
+        Minhas Palestras
+      </h2>
       {minhasPalestras.length === 0 && (
-        <p className="text-muted-foreground"> Você ainda não tem palestras atribuídas. </p>
+        <p className="text-muted-foreground">
+          Você ainda não tem palestras atribuídas.
+        </p>
       )}
       <div className="space-y-6">
         {minhasPalestras.map((palestra) => (
           <div key={palestra.id} className="p-4 border rounded-lg">
-            <h3 className="text-xl font-bold text-card-foreground"> {palestra.tema} </h3>
+            <h3 className="text-xl font-bold text-card-foreground">
+              {palestra.tema}
+            </h3>
             <div className="flex flex-wrap gap-x-6 gap-y-2 text-muted-foreground mt-2">
               <p className="flex items-center">
-                <CalendarIcon className="h-4 w-4 mr-2" />{new Date(palestra.data + "T00:00").toLocaleDateString("pt-BR", { timeZone: "UTC", })}
+                <CalendarIcon className="h-4 w-4 mr-2" />
+                {new Date(palestra.data + "T00:00").toLocaleDateString(
+                  "pt-BR",
+                  {
+                    timeZone: "UTC",
+                  }
+                )}
               </p>
               <p className="flex items-center">
                 <ClockIcon className="h-4 w-4 mr-2" /> {palestra.horario}
               </p>
               <p className="flex items-center">
-                <UsersIcon className="h-4 w-4 mr-2" /> {palestra.inscritos} /{palestra.vagas} vagas
+                <UsersIcon className="h-4 w-4 mr-2" /> {palestra.inscritos}/
+                {palestra.vagas} vagas
               </p>
             </div>
             <div className="mt-4 pt-4 border-t">
@@ -167,7 +259,8 @@ const PalestranteDashboard = ({ minhasPalestras }: { minhasPalestras: Palestra[]
                 participantes.
               </p>
               <Button variant="secondary">
-                <UploadIcon className="h-4 w-4 mr-2" />Fazer Upload
+                <UploadIcon className="h-4 w-4 mr-2" />
+                Fazer Upload
               </Button>
             </div>
           </div>
@@ -178,18 +271,33 @@ const PalestranteDashboard = ({ minhasPalestras }: { minhasPalestras: Palestra[]
 };
 
 //Componente - Modal de Relatório de Presença
-const RelatorioPresencaModal = ({ palestra, onClose }: { palestra: Palestra; onClose: () => void; }) => {
+const RelatorioPresencaModal = ({
+  palestra,
+  onClose,
+}: {
+  palestra: Palestra;
+  onClose: () => void;
+}) => {
   const [inscritos, setInscritos] = React.useState<Inscricao[]>([]);
 
   React.useEffect(() => {
-    const q = query(collection(db, "inscricoes"), where("palestraId", "==", palestra.id));
+    const q = query(
+      collection(db, "inscricoes"),
+      where("palestraId", "==", palestra.id)
+    );
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id } as Inscricao)); setInscritos(data);
+      const data = snapshot.docs.map(
+        (doc) => ({ ...doc.data(), id: doc.id } as Inscricao)
+      );
+      setInscritos(data);
     });
     return () => unsubscribe();
   }, [palestra.id]);
 
-  const handleMarcarPresenca = async (inscricaoId: string, presenca: boolean) => {
+  const handleMarcarPresenca = async (
+    inscricaoId: string,
+    presenca: boolean
+  ) => {
     try {
       const inscricaoRef = doc(db, "inscricoes", inscricaoId);
       await updateDoc(inscricaoRef, { presente: presenca });
@@ -203,28 +311,46 @@ const RelatorioPresencaModal = ({ palestra, onClose }: { palestra: Palestra; onC
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
       <div className="bg-card rounded-xl shadow-2xl p-6 w-full max-w-lg border border-border">
         <h2 className="text-xl font-bold mb-2">Lista de Presença</h2>
-        <p className="text-muted-foreground mb-4 font-medium">{palestra.tema}</p>
+        <p className="text-muted-foreground mb-4 font-medium">
+          {palestra.tema}
+        </p>
         <div className="space-y-2 max-h-80 overflow-y-auto pr-2">
           {inscritos.length === 0 && (
-            <p className="text-muted-foreground">Nenhum inscrito para esta palestra.</p>
+            <p className="text-muted-foreground">
+              Nenhum inscrito para esta palestra.
+            </p>
           )}
           {inscritos.map((inscrito) => (
-            <div key={inscrito.id} className="flex items-center justify-between p-2 bg-secondary rounded-md" >
+            <div
+              key={inscrito.id}
+              className="flex items-center justify-between p-2 bg-secondary rounded-md"
+            >
               <div>
                 <p className="font-medium">{inscrito.participante}</p>
                 <p className="text-sm text-muted-foreground">
                   {inscrito.email}
                 </p>
               </div>
-              <label htmlFor={`check-${inscrito.id}`} className="flex items-center gap-2 cursor-pointer text-sm" >
-                <Checkbox id={`check-${inscrito.id}`} checked={!!inscrito.presente} onCheckedChange={(checked) => handleMarcarPresenca(inscrito.id, !!checked)} />
+              <label
+                htmlFor={`check-${inscrito.id}`}
+                className="flex items-center gap-2 cursor-pointer text-sm"
+              >
+                <Checkbox
+                  id={`check-${inscrito.id}`}
+                  checked={!!inscrito.presente}
+                  onCheckedChange={(checked) =>
+                    handleMarcarPresenca(inscrito.id, !!checked)
+                  }
+                />
                 Presente
               </label>
             </div>
           ))}
         </div>
         <div className="mt-6 flex justify-end">
-          <Button onClick={onClose} variant="outline"> Fechar </Button>
+          <Button onClick={onClose} variant="outline">
+            Fechar
+          </Button>
         </div>
       </div>
     </div>
@@ -232,7 +358,13 @@ const RelatorioPresencaModal = ({ palestra, onClose }: { palestra: Palestra; onC
 };
 
 // Modal de Detalhes da Palestra para inscrição
-const InscricaoModal = ({ palestra, open, onClose, onConfirm, inscrevendo }: {
+const InscricaoModal = ({
+  palestra,
+  open,
+  onClose,
+  onConfirm,
+  inscrevendo,
+}: {
   palestra: Palestra | null;
   open: boolean;
   onClose: () => void;
@@ -245,16 +377,39 @@ const InscricaoModal = ({ palestra, open, onClose, onConfirm, inscrevendo }: {
       <div className="bg-card rounded-xl shadow-2xl p-6 w-full max-w-md border border-border">
         <h2 className="text-2xl font-bold mb-4">{palestra.tema}</h2>
         <div className="space-y-2 mb-6 text-muted-foreground">
-          <p className="flex items-center"><CalendarIcon className="h-4 w-4 mr-2" /> {new Date(palestra.data + "T00:00").toLocaleDateString("pt-BR", { timeZone: "UTC" })}</p>
-          <p className="flex items-center"><ClockIcon className="h-4 w-4 mr-2" /> {palestra.horario}</p>
-          <p className="flex items-center"><MapPinIcon className="h-4 w-4 mr-2" /> {palestra.local}</p>
-          <p className="flex items-center"><UserIcon className="h-4 w-4 mr-2" /> {palestra.palestrante}</p>
-          <p className="flex items-center"><UsersIcon className="h-4 w-4 mr-2" /> {palestra.inscritos} / {palestra.vagas} vagas</p>
+          <p className="flex items-center">
+            <CalendarIcon className="h-4 w-4 mr-2" />{" "}
+            {new Date(palestra.data + "T00:00").toLocaleDateString("pt-BR", {
+              timeZone: "UTC",
+            })}
+          </p>
+          <p className="flex items-center">
+            <ClockIcon className="h-4 w-4 mr-2" /> {palestra.horario}
+          </p>
+          <p className="flex items-center">
+            <MapPinIcon className="h-4 w-4 mr-2" /> {palestra.local}
+          </p>
+          <p className="flex items-center">
+            <UserIcon className="h-4 w-4 mr-2" /> {palestra.palestrante}
+          </p>
+          <p className="flex items-center">
+            <UsersIcon className="h-4 w-4 mr-2" /> {palestra.inscritos} /{" "}
+            {palestra.vagas} vagas
+          </p>
         </div>
         <div className="flex gap-2 justify-end">
-          <Button variant="outline" onClick={onClose}>Cancelar</Button>
-          <Button onClick={onConfirm} disabled={inscrevendo || palestra.inscritos >= palestra.vagas}>
-            {palestra.inscritos >= palestra.vagas ? "Vagas Esgotadas" : inscrevendo ? "Inscrevendo..." : "Confirmar Inscrição"}
+          <Button variant="outline" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button
+            onClick={onConfirm}
+            disabled={inscrevendo || palestra.inscritos >= palestra.vagas}
+          >
+            {palestra.inscritos >= palestra.vagas
+              ? "Vagas Esgotadas"
+              : inscrevendo
+              ? "Inscrevendo..."
+              : "Confirmar Inscrição"}
           </Button>
         </div>
       </div>
@@ -263,16 +418,31 @@ const InscricaoModal = ({ palestra, open, onClose, onConfirm, inscrevendo }: {
 };
 
 // Modal de confirmação de exclusão de palestra
-const ConfirmDeleteModal = ({ open, onClose, onConfirm }: { open: boolean; onClose: () => void; onConfirm: () => void; }) => {
+const ConfirmDeleteModal = ({
+  open,
+  onClose,
+  onConfirm,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+}) => {
   if (!open) return null;
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
       <div className="bg-card rounded-xl shadow-2xl p-6 w-full max-w-sm border border-border">
         <h2 className="text-xl font-bold mb-4">Confirmar Exclusão</h2>
-        <p className="mb-6 text-muted-foreground">Tem certeza que deseja excluir esta palestra? Esta ação não poderá ser desfeita.</p>
+        <p className="mb-6 text-muted-foreground">
+          Tem certeza que deseja excluir esta palestra? Esta ação não poderá ser
+          desfeita.
+        </p>
         <div className="flex gap-2 justify-end">
-          <Button variant="outline" onClick={onClose}>Cancelar</Button>
-          <Button variant="destructive" onClick={onConfirm}>Excluir</Button>
+          <Button variant="outline" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button variant="destructive" onClick={onConfirm}>
+            Excluir
+          </Button>
         </div>
       </div>
     </div>
@@ -280,25 +450,41 @@ const ConfirmDeleteModal = ({ open, onClose, onConfirm }: { open: boolean; onClo
 };
 
 export default function PalestrasApp() {
-  const [allUsers, setAllUsers] = React.useState<User[]>(Object.values(userProfiles));
-  const [currentUser, setCurrentUser] = React.useState<User>(userProfiles.participante);
+  const [allUsers, setAllUsers] = React.useState<User[]>(
+    Object.values(userProfiles)
+  );
+  const [currentUser, setCurrentUser] = React.useState<User>(
+    userProfiles.participante
+  );
   const { name: usuarioNome, email: usuarioEmail, role: papel } = currentUser;
   const [palestras, setPalestras] = React.useState<Palestra[]>([]);
-  const [inscricoesUsuario, setInscricoesUsuario] = React.useState<Inscricao[]>([]);
+  const [inscricoesUsuario, setInscricoesUsuario] = React.useState<Inscricao[]>(
+    []
+  );
   const [loading, setLoading] = React.useState(true);
   const [view, setView] = React.useState("palestras");
-  const [modalRelatorio, setModalRelatorio] = React.useState<Palestra | null>(null);
-  const initialFormState = { tema: "", data: "", horario: "", local: "", palestrante: "", vagas: 30 };
+  const [modalRelatorio, setModalRelatorio] = React.useState<Palestra | null>(
+    null
+  );
+  const initialFormState = {
+    tema: "",
+    data: "",
+    horario: "",
+    local: "",
+    palestrante: "",
+    vagas: 30,
+  };
   const [form, setForm] = React.useState(initialFormState);
   const [editId, setEditId] = React.useState<string | null>(null);
   const [modalInscricao, setModalInscricao] = useState<Palestra | null>(null);
   const [inscrevendo, setInscrevendo] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [palestraParaExcluir, setPalestraParaExcluir] = useState<string | null>(null);
+  const [palestraParaExcluir, setPalestraParaExcluir] = useState<string | null>(
+    null
+  );
   const podeGerenciar = papel === "organizador" || papel === "administrador";
-  const pathname = usePathname();
 
-  //Função para preencher o campo palestrante automaticamente
+  //Preencher palestrante automaticamente
   React.useEffect(() => {
     if (!editId && (papel === "palestrante" || podeGerenciar)) {
       setForm((prev) => ({ ...prev, palestrante: usuarioNome }));
@@ -307,19 +493,21 @@ export default function PalestrasApp() {
     }
   }, [usuarioNome, papel, podeGerenciar, editId]);
 
-  //Carregar palestras do Firestore
+  const pathname = usePathname();
+
+  //Carregar palestras
   React.useEffect(() => {
     setLoading(true);
     const q = query(collection(db, "palestras"));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const palestrasData: Palestra[] = querySnapshot.docs.map(
-        (doc) =>
-        ({
-          ...doc.data(),
-          id: doc.id,
-          inscritos: doc.data().inscritos || 0,
-          vagas: doc.data().vagas || 0,
-        } as Palestra)
+        (docSnap) =>
+          ({
+            ...docSnap.data(),
+            id: docSnap.id,
+            inscritos: docSnap.data().inscritos || 0,
+            vagas: docSnap.data().vagas || 0,
+          } as Palestra)
       );
       setPalestras(palestrasData);
       setLoading(false);
@@ -327,16 +515,13 @@ export default function PalestrasApp() {
     return () => unsubscribe();
   }, []);
 
-  //Carregar inscrições do usuário atual
+  //Carregar inscrições do usuário
   React.useEffect(() => {
     if (!usuarioEmail) {
       setInscricoesUsuario([]);
       return;
     }
-    const q = query(
-      collection(db, "inscricoes"),
-      where("email", "==", usuarioEmail)
-    );
+    const q = query(collection(db, "inscricoes"), where("email", "==", usuarioEmail));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const inscricoesData: Inscricao[] = querySnapshot.docs.map(
         (doc) => ({ ...doc.data(), id: doc.id } as Inscricao)
@@ -346,12 +531,12 @@ export default function PalestrasApp() {
     return () => unsubscribe();
   }, [usuarioEmail, papel]);
 
-  //Nova função para abrir modal de inscrição
+  //Abrir modal de inscrição
   const handleAbrirModalInscricao = (palestra: Palestra) => {
     setModalInscricao(palestra);
   };
 
-  // Nova função para confirmar inscrição no modal
+  //Confirmar inscrição
   const handleConfirmarInscricao = async () => {
     if (!modalInscricao || !usuarioNome || !usuarioEmail) return;
     setInscrevendo(true);
@@ -375,7 +560,7 @@ export default function PalestrasApp() {
     }
   };
 
-  //Função para criar ou editar palestra
+  //Criar/editar palestra
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!podeGerenciar && papel !== "palestrante") return;
@@ -403,7 +588,7 @@ export default function PalestrasApp() {
     }
   };
 
-  // Função para cancelar inscrição
+  //Cancelar inscrição
   const handleCancelarInscricao = async (palestraId: string) => {
     const inscricao = inscricoesUsuario.find((i) => i.palestraId === palestraId);
     if (!inscricao) return;
@@ -419,7 +604,7 @@ export default function PalestrasApp() {
     }
   };
 
-  // Função para excluir palestra
+  //Excluir palestra
   const handleDelete = async (id: string) => {
     try {
       const inscricoesQuery = query(
@@ -446,7 +631,7 @@ export default function PalestrasApp() {
     }
   };
 
-  // Abrir modal automaticamente se a URL for /palestra/[id]
+  //Abrir modal de inscrição via URL /palestra/[id]
   useEffect(() => {
     const match = pathname.match(/^\/palestra\/(.+)$/);
     if (match && palestras.length > 0) {
@@ -456,13 +641,12 @@ export default function PalestrasApp() {
     }
   }, [pathname, palestras]);
 
-  // Nova função para abrir modal de confirmação
+  //Modal de exclusão
   const handleAbrirModalDelete = (id: string) => {
     setPalestraParaExcluir(id);
     setDeleteModalOpen(true);
   };
 
-  // Nova função para confirmar exclusão
   const handleConfirmarDelete = async () => {
     if (palestraParaExcluir) {
       await handleDelete(palestraParaExcluir);
@@ -472,206 +656,395 @@ export default function PalestrasApp() {
   };
 
   return (
-    <div className="min-h-screen bg-background font-sans">
-      {modalRelatorio && (
-        <RelatorioPresencaModal palestra={modalRelatorio} onClose={() => setModalRelatorio(null)} />
-      )}
-      <ConfirmDeleteModal
-        open={deleteModalOpen}
-        onClose={() => { setDeleteModalOpen(false); setPalestraParaExcluir(null); }}
-        onConfirm={handleConfirmarDelete}
-      />
-      <InscricaoModal
-        palestra={modalInscricao}
-        open={!!modalInscricao}
-        onClose={() => setModalInscricao(null)}
-        onConfirm={handleConfirmarInscricao}
-        inscrevendo={inscrevendo}
-      />
-      <main className="container mx-auto px-4 py-8">
-        <header className="mb-8">
-          <h1 className="text-4xl text-center font-bold text-foreground"> Sistema de Gestão de Palestras </h1>
-          <p className="text-center text-muted-foreground"> Bem-vindo(a), {usuarioNome}! ({papel}) </p>
-        </header>
-
-        <div className="bg-card rounded-xl shadow-md p-6 mb-8 border border-border">
-          <h2 className="text-xl font-semibold mb-4 text-card-foreground">
-            Trocar de Perfil (Simulação):
-          </h2>
-          <div className="flex flex-wrap gap-3">
-            {allUsers.map((user) => (
-              <Button key={user.id} onClick={() => {
-                setCurrentUser(user);
-                setView("palestras");
-                setEditId(null);
-                setForm(initialFormState);
-                setModalInscricao(null);
-                setModalRelatorio(null);
-              }} variant={currentUser.id === user.id ? "default" : "secondary"} className={`transition-all duration-300 transform ${currentUser.id === user.id ? "scale-105 shadow-lg" : "" }`} >
-                {user.name}
-              </Button>
-            ))}
-          </div>
+    <div className="min-h-screen bg-background font-sans flex flex-col">
+      {/* Navbar */}
+      <nav className="fixed top-0 left-0 w-full z-40 bg-card/80 backdrop-blur border-b border-border shadow-md flex items-center justify-between px-8 py-3">
+        <div className="flex-1 flex justify-center">
+          <span className="text-2xl font-bold text-primary tracking-tight select-none">
+            Certificadora3
+          </span>
         </div>
+        <div className="flex items-center gap-2 absolute right-8">
+          <span className="text-muted-foreground text-sm mr-2 hidden sm:inline">
+            {usuarioNome} ({papel})
+          </span>
+        </div>
+      </nav>
 
-        {/* PAINEL DO ADMINISTRADOR */}
-        {papel === "administrador" && (
-          <div className="mb-8">
-            <Button onClick={() => setView(view === "admin" ? "palestras" : "admin")} >
-              {view === "admin" ? "Ver Palestras" : "Painel do Administrador"}
-            </Button>
+      <div className="pt-20 flex-1">
+        {modalRelatorio && (
+          <RelatorioPresencaModal
+            palestra={modalRelatorio}
+            onClose={() => setModalRelatorio(null)}
+          />
+        )}
+        <ConfirmDeleteModal
+          open={deleteModalOpen}
+          onClose={() => {
+            setDeleteModalOpen(false);
+            setPalestraParaExcluir(null);
+          }}
+          onConfirm={handleConfirmarDelete}
+        />
+        <InscricaoModal
+          palestra={modalInscricao}
+          open={!!modalInscricao}
+          onClose={() => setModalInscricao(null)}
+          onConfirm={handleConfirmarInscricao}
+          inscrevendo={inscrevendo}
+        />
+        <main className="container mx-auto px-4 py-8">
+          <div className="bg-card rounded-xl shadow-md p-6 mb-8 border border-border">
+            <h2 className="text-xl font-semibold mb-4 text-card-foreground">
+              Trocar de Perfil (Simulação):
+            </h2>
+            <div className="flex flex-wrap gap-3">
+              {allUsers.map((user) => (
+                <Button
+                  key={user.id}
+                  onClick={() => {
+                    setCurrentUser(user);
+                    setView("palestras");
+                    setEditId(null);
+                    setForm(initialFormState);
+                    setModalInscricao(null);
+                    setModalRelatorio(null);
+                  }}
+                  variant={currentUser.id === user.id ? "default" : "secondary"}
+                  className={`transition-all duration-300 transform ${
+                    currentUser.id === user.id ? "scale-105 shadow-lg" : ""
+                  }`}
+                >
+                  {user.name}
+                </Button>
+              ))}
+            </div>
           </div>
-        )}
-        {papel === "administrador" && view === "admin" && (
-          <AdminPanel users={allUsers} setUsers={setAllUsers} />
-        )}
 
-        {view === "palestras" && (
-          <>
-            {/* DASHBOARD DO PALESTRANTE */}
-            {papel === "palestrante" && (
-              <PalestranteDashboard
-                minhasPalestras={palestras.filter(
-                  (p) => p.palestranteEmail === usuarioEmail
-                )}
-              />
-            )}
+          {/* PAINEL DO ADMINISTRADOR */}
+          {papel === "administrador" && (
+            <div className="mb-8">
+              <Button
+                onClick={() => setView(view === "admin" ? "palestras" : "admin")}
+              >
+                {view === "admin" ? "Ver Palestras" : "Painel do Administrador"}
+              </Button>
+            </div>
+          )}
+          {papel === "administrador" && view === "admin" && (
+            <AdminPanel users={allUsers} setUsers={setAllUsers} />
+          )}
 
-            {/* FORMULÁRIO DE CRIAÇÃO/EDIÇÃO */}
-            {(podeGerenciar || papel === "palestrante") && (
-              <div className="bg-card rounded-xl shadow-md p-6 mb-8 border border-border">
-                <h2 className="text-2xl font-bold mb-6 text-card-foreground">
-                  {editId ? "Editar Palestra" : "Criar Nova Palestra"}
-                </h2>
-                <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  <div className="md:col-span-2 lg:col-span-3">
-                    <Label htmlFor="tema" className="mb-1"> Tema </Label>
-                    <Input id="tema" value={form.tema} onChange={(e) => setForm({ ...form, tema: e.target.value })} placeholder="Título da palestra" required />
-                  </div>
-                  <div>
-                    <Label htmlFor="data" className="mb-1"> Data </Label>
-                    <Input id="data" type="date" value={form.data} onChange={(e) => setForm({ ...form, data: e.target.value })} required />
-                  </div>
-                  <div>
-                    <Label htmlFor="horario" className="mb-1"> Horário </Label>
-                    <Input id="horario" type="time" value={form.horario} onChange={(e) => setForm({ ...form, horario: e.target.value })} required />
-                  </div>
-                  <div>
-                    <Label htmlFor="local" className="mb-1"> Local </Label>
-                    <Input id="local" value={form.local} onChange={(e) => setForm({ ...form, local: e.target.value })} placeholder="Local do evento" required />
-                  </div>
-                  <div>
-                    <Label htmlFor="palestrante" className="mb-1"> Palestrante </Label>
-                    <Input id="palestrante" value={form.palestrante} onChange={(e) => setForm({ ...form, palestrante: e.target.value })} placeholder="Nome do palestrante" required />
-                  </div>
-                  {podeGerenciar && (
-                    <div>
-                      <Label htmlFor="vagas" className="mb-1"> Vagas </Label>
-                      <Input id="vagas" type="number" value={form.vagas} onChange={(e) => setForm({ ...form, vagas: Number(e.target.value) })} required />
-                    </div>
+          {view === "palestras" && (
+            <>
+              {/* DASHBOARD DO PALESTRANTE */}
+              {papel === "palestrante" && (
+                <PalestranteDashboard
+                  minhasPalestras={palestras.filter(
+                    (p) => p.palestranteEmail === usuarioEmail
                   )}
-                  <div className="md:col-span-2 lg:col-span-3 flex gap-3 mt-4">
-                    <Button type="submit" className="flex-1">
-                      {editId ? "Atualizar Palestra" : "Criar Palestra"}
-                    </Button>
-                    {editId && (
-                      <Button type="button" variant="outline" onClick={() => { setEditId(null); setForm(initialFormState); }}> Cancelar </Button>
-                    )}
-                  </div>
-                </form>
-              </div>
-            )}
-            {/* LISTA DE PALESTRAS */}
-            <div>
-              <h2 className="text-3xl font-bold mb-6 text-foreground">
-                Palestras Disponíveis
-              </h2>
-              {loading ? (<p>Carregando palestras...</p>) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {palestras.map((palestra) => {
-                    const inscricao = inscricoesUsuario.find((i) => i.palestraId === palestra.id);
-                    const jaInscrito = !!inscricao;
-                    const podeModificar = palestra.palestranteEmail === usuarioEmail || podeGerenciar;
-                    const vagasEsgotadas = palestra.inscritos >= palestra.vagas;
+                />
+              )}
 
-                    return (
-                      <div key={palestra.id} className="bg-card rounded-xl shadow-lg p-6 border border-border hover:shadow-xl hover:border-primary/30 transition-all duration-300 flex flex-col">
-                        <div className="flex flex-row gap-4 flex-grow">
-                          <div className="flex-1">
-                            <h3 className="text-xl font-bold text-card-foreground mb-3">
-                              {palestra.tema}
-                            </h3>
-                            <div className="space-y-2 mb-4 text-muted-foreground">
-                              <p className="flex items-center">
-                                <CalendarIcon className="h-4 w-4 mr-2" />{new Date(palestra.data + "T00:00").toLocaleDateString("pt-BR", { timeZone: "UTC", })}
-                              </p>
-                              <p className="flex items-center">
-                                <ClockIcon className="h-4 w-4 mr-2" />{palestra.horario}
-                              </p>
-                              <p className="flex items-center">
-                                <MapPinIcon className="h-4 w-4 mr-2" />{palestra.local}
-                              </p>
-                              <p className="flex items-center">
-                                <UserIcon className="h-4 w-4 mr-2" />{palestra.palestrante}
-                              </p>
-                              <p className="flex items-center">
-                                <UsersIcon className="h-4 w-4 mr-2" />{palestra.inscritos} / {palestra.vagas} vagas
-                              </p>
-                              {jaInscrito && (
-                                <p className="flex items-center font-semibold text-green-600">
-                                  <CheckCircleIcon className="h-5 w-5 mr-2" /> Você está inscrito!
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                          {/* QR Code para visualização da palestra à direita */}
-                          <div className="flex flex-col items-center justify-center min-w-[120px]">
-                            <a href={`${typeof window !== "undefined" ? window.location.origin : ""}/palestra/${palestra.id}`} target="_self" rel="noopener noreferrer">
-                              <QRCodeSVG
-                                value={`${typeof window !== "undefined" ? window.location.origin : ""}/palestra/${palestra.id}`}
-                                size={96}
-                                bgColor="#fff"
-                                fgColor="#000"
-                                level="Q"
-                                includeMargin={true}
-                              />
-                            </a>
-                            <span className="text-xs text-muted-foreground mt-2 text-center">Escaneie ou clique para visualizar</span>
-                          </div>
-                        </div>
-                        <div className="flex gap-2 flex-wrap mt-auto pt-4 border-t border-border/50">
-                          {papel === "participante" &&
-                            (jaInscrito ? (
-                              <>
-                                <Button variant="outline" onClick={() => handleCancelarInscricao(palestra.id)} className="flex-1"> Cancelar Inscrição </Button>
-                                <Button onClick={() => handleEmitirCertificado(palestra.tema)} className="flex-1" disabled={!inscricao.presente}>
-                                  <AwardIcon className="h-4 w-4 mr-2" /> {inscricao.presente ? "Emitir Certificado" : "Aguardando Presença"}
-                                </Button>
-                              </>
-                            ) : (
-                              <Button onClick={() => handleAbrirModalInscricao(palestra)} className="flex-1" disabled={vagasEsgotadas}>
-                                {vagasEsgotadas ? "Vagas Esgotadas" : "Inscrever-se"}
-                              </Button>
-                            ))}
-                          {podeGerenciar && (
-                            <>
-                              <Button variant="secondary" onClick={() => setModalRelatorio(palestra)} className="flex-1"> Ver Presença </Button>
-                              <Button variant="outline" onClick={() => { setForm({ ...palestra, vagas: palestra.vagas || 30 }); setEditId(palestra.id); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="flex-1">
-                                Editar
-                              </Button>
-                              <Button variant="destructive" onClick={() => handleAbrirModalDelete(palestra.id)} className="flex-1"> Excluir </Button>
-                            </>
-                          )}
-                        </div>
+              {/* FORMULÁRIO DE CRIAÇÃO/EDIÇÃO */}
+              {(podeGerenciar || papel === "palestrante") && (
+                <div className="bg-card rounded-xl shadow-md p-6 mb-8 border border-border">
+                  <h2 className="text-2xl font-bold mb-6 text-card-foreground">
+                    {editId ? "Editar Palestra" : "Criar Nova Palestra"}
+                  </h2>
+                  <form
+                    onSubmit={handleSubmit}
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                  >
+                    <div className="md:col-span-2 lg:col-span-3">
+                      <Label htmlFor="tema" className="mb-1">
+                        Tema
+                      </Label>
+                      <Input
+                        id="tema"
+                        value={form.tema}
+                        onChange={(e) =>
+                          setForm({ ...form, tema: e.target.value })
+                        }
+                        placeholder="Título da palestra"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="data" className="mb-1">
+                        Data
+                      </Label>
+                      <Input
+                        id="data"
+                        type="date"
+                        value={form.data}
+                        onChange={(e) =>
+                          setForm({ ...form, data: e.target.value })
+                        }
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="horario" className="mb-1">
+                        Horário
+                      </Label>
+                      <Input
+                        id="horario"
+                        type="time"
+                        value={form.horario}
+                        onChange={(e) =>
+                          setForm({ ...form, horario: e.target.value })
+                        }
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="local" className="mb-1">
+                        Local
+                      </Label>
+                      <Input
+                        id="local"
+                        value={form.local}
+                        onChange={(e) =>
+                          setForm({ ...form, local: e.target.value })
+                        }
+                        placeholder="Local do evento"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="palestrante" className="mb-1">
+                        Palestrante
+                      </Label>
+                      <Input
+                        id="palestrante"
+                        value={form.palestrante}
+                        onChange={(e) =>
+                          setForm({ ...form, palestrante: e.target.value })
+                        }
+                        placeholder="Nome do palestrante"
+                        required
+                      />
+                    </div>
+                    {podeGerenciar && (
+                      <div>
+                        <Label htmlFor="vagas" className="mb-1">
+                          Vagas
+                        </Label>
+                        <Input
+                          id="vagas"
+                          type="number"
+                          value={form.vagas}
+                          onChange={(e) =>
+                            setForm({ ...form, vagas: Number(e.target.value) })
+                          }
+                          required
+                        />
                       </div>
-                    );
-                  })}
+                    )}
+                    <div className="md:col-span-2 lg:col-span-3 flex gap-3 mt-4">
+                      <Button type="submit" className="flex-1">
+                        {editId ? "Atualizar Palestra" : "Criar Palestra"}
+                      </Button>
+                      {editId && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            setEditId(null);
+                            setForm(initialFormState);
+                          }}
+                        >
+                          Cancelar
+                        </Button>
+                      )}
+                    </div>
+                  </form>
                 </div>
               )}
-            </div>
-          </>
-        )}
-      </main>
-    </div >
+
+              {/* LISTA DE PALESTRAS */}
+              <div>
+                <h2 className="text-3xl font-bold mb-6 text-foreground">
+                  Palestras Disponíveis
+                </h2>
+                {loading ? (
+                  <p>Carregando palestras...</p>
+                ) : (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {palestras.map((palestra) => {
+                      const inscricao = inscricoesUsuario.find(
+                        (i) => i.palestraId === palestra.id
+                      );
+                      const jaInscrito = !!inscricao;
+                      const podeModificar =
+                        palestra.palestranteEmail === usuarioEmail ||
+                        podeGerenciar;
+                      const vagasEsgotadas =
+                        palestra.inscritos >= palestra.vagas;
+
+                      return (
+                        <div
+                          key={palestra.id}
+                          className="bg-card rounded-xl shadow-lg p-6 border border-border hover:shadow-xl hover:border-primary/30 transition-all duration-300 flex flex-col"
+                        >
+                          <div className="flex flex-row gap-4 flex-grow">
+                            <div className="flex-1">
+                              <h3 className="text-xl font-bold text-card-foreground mb-3">
+                                {palestra.tema}
+                              </h3>
+                              <div className="space-y-2 mb-4 text-muted-foreground">
+                                <p className="flex items-center">
+                                  <CalendarIcon className="h-4 w-4 mr-2" />
+                                  {new Date(
+                                    palestra.data + "T00:00"
+                                  ).toLocaleDateString("pt-BR", {
+                                    timeZone: "UTC",
+                                  })}
+                                </p>
+                                <p className="flex items-center">
+                                  <ClockIcon className="h-4 w-4 mr-2" />
+                                  {palestra.horario}
+                                </p>
+                                <p className="flex items-center">
+                                  <MapPinIcon className="h-4 w-4 mr-2" />
+                                  {palestra.local}
+                                </p>
+                                <p className="flex items-center">
+                                  <UserIcon className="h-4 w-4 mr-2" />
+                                  {palestra.palestrante}
+                                </p>
+                                <p className="flex items-center">
+                                  <UsersIcon className="h-4 w-4 mr-2" />
+                                  {palestra.inscritos} / {palestra.vagas} vagas
+                                </p>
+                                {jaInscrito && (
+                                  <p className="flex items-center font-semibold text-green-600">
+                                    <CheckCircleIcon className="h-5 w-5 mr-2" />{" "}
+                                    Você está inscrito!
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            {/* QR Code */}
+                            <div className="flex flex-col items-center justify-center min-w-[120px]">
+                              <a
+                                href={`${
+                                  typeof window !== "undefined"
+                                    ? window.location.origin
+                                    : ""
+                                }/palestra/${palestra.id}`}
+                                target="_self"
+                                rel="noopener noreferrer"
+                              >
+                                <QRCodeSVG
+                                  value={`${
+                                    typeof window !== "undefined"
+                                      ? window.location.origin
+                                      : ""
+                                  }/palestra/${palestra.id}`}
+                                  size={96}
+                                  bgColor="#fff"
+                                  fgColor="#000"
+                                  level="Q"
+                                  includeMargin={true}
+                                />
+                              </a>
+                              <span className="text-xs text-muted-foreground mt-2 text-center">
+                                Escaneie ou clique para visualizar
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex gap-2 flex-wrap mt-auto pt-4 border-t border-border/50">
+                            {papel === "participante" &&
+                              (jaInscrito ? (
+                                <>
+                                  <Button
+                                    variant="outline"
+                                    onClick={() =>
+                                      handleCancelarInscricao(palestra.id)
+                                    }
+                                    className="flex-1"
+                                  >
+                                    Cancelar Inscrição
+                                  </Button>
+                                  <Button
+                                    onClick={() =>
+                                      handleEmitirCertificado(palestra.tema)
+                                    }
+                                    className="flex-1"
+                                    disabled={!inscricao.presente}
+                                  >
+                                    <AwardIcon className="h-4 w-4 mr-2" />{" "}
+                                    {inscricao.presente
+                                      ? "Emitir Certificado"
+                                      : "Aguardando Presença"}
+                                  </Button>
+                                </>
+                              ) : (
+                                <Button
+                                  onClick={() =>
+                                    handleAbrirModalInscricao(palestra)
+                                  }
+                                  className="flex-1"
+                                  disabled={vagasEsgotadas}
+                                >
+                                  {vagasEsgotadas
+                                    ? "Vagas Esgotadas"
+                                    : "Inscrever-se"}
+                                </Button>
+                              ))}
+                            {podeModificar && (
+                              <>
+                                <Button
+                                  variant="secondary"
+                                  onClick={() => setModalRelatorio(palestra)}
+                                  className="flex-1"
+                                >
+                                  Ver Presença
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  onClick={() => {
+                                    setForm({
+                                      ...palestra,
+                                      vagas: palestra.vagas || 30,
+                                    });
+                                    setEditId(palestra.id);
+                                    window.scrollTo({
+                                      top: 0,
+                                      behavior: "smooth",
+                                    });
+                                  }}
+                                  className="flex-1"
+                                >
+                                  Editar
+                                </Button>
+                                <Button
+                                  variant="destructive"
+                                  onClick={() =>
+                                    handleAbrirModalDelete(palestra.id)
+                                  }
+                                  className="flex-1"
+                                >
+                                  Excluir
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </main>
+      </div>
+    </div>
   );
 }
+
+// OBS: a função handleEmitirCertificado é referenciada no código original.
+// Garanta que ela exista no seu projeto ou substitua a chamada conforme necessário.
