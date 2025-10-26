@@ -145,6 +145,7 @@ export default function Relatorios() {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-secondary/30 to-background">
       <main className="flex-1 container mx-auto px-4 py-8">
+        {/* Simulador de contas */}
         <div className="bg-card rounded-xl shadow-lg p-6 mb-8 border border-border">
           <h2 className="text-xl font-semibold mb-4 text-card-foreground">
             Visualizar como:

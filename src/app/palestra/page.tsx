@@ -26,7 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../components/ui/select";
-import { toast } from "sonner";
+import { toast, Toaster } from "sonner";
 import {
   CalendarIcon,
   ClockIcon,
@@ -484,7 +484,7 @@ export default function PalestrasApp() {
   );
   const podeGerenciar = papel === "organizador" || papel === "administrador";
 
-  //Preencher palestrante automaticamente
+  //Preencher palestrante automaticamente no formulário
   React.useEffect(() => {
     if (!editId && (papel === "palestrante" || podeGerenciar)) {
       setForm((prev) => ({ ...prev, palestrante: usuarioNome }));
@@ -495,7 +495,7 @@ export default function PalestrasApp() {
 
   const pathname = usePathname();
 
-  //Carregar palestras
+  //Carregar palestras 
   React.useEffect(() => {
     setLoading(true);
     const q = query(collection(db, "palestras"));
@@ -515,7 +515,7 @@ export default function PalestrasApp() {
     return () => unsubscribe();
   }, []);
 
-  //Carregar inscrições do usuário
+  //Carregar inscrições do usuário 
   React.useEffect(() => {
     if (!usuarioEmail) {
       setInscricoesUsuario([]);
@@ -536,7 +536,7 @@ export default function PalestrasApp() {
     setModalInscricao(palestra);
   };
 
-  //Confirmar inscrição
+  //Confirmar inscrição --> Requisito Funcional 3
   const handleConfirmarInscricao = async () => {
     if (!modalInscricao || !usuarioNome || !usuarioEmail) return;
     setInscrevendo(true);
@@ -560,7 +560,7 @@ export default function PalestrasApp() {
     }
   };
 
-  //Criar/editar palestra
+  //Criar/editar palestra --> Requisito Funcional 2
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!podeGerenciar && papel !== "palestrante") return;
@@ -588,32 +588,7 @@ export default function PalestrasApp() {
     }
   };
 
-  //Cancelar inscrição
-  const handleCancelarInscricao = async (palestraId: string) => {
-    const inscricao = inscricoesUsuario.find((i) => i.palestraId === palestraId);
-    if (!inscricao) return;
-    try {
-      await deleteDoc(doc(db, "inscricoes", inscricao.id));
-      const palestraRef = doc(db, "palestras", palestraId);
-      await updateDoc(palestraRef, {
-        inscritos: increment(-1),
-      });
-      toast.info("Inscrição cancelada");
-    } catch (error) {
-      toast.error("Erro ao tentar cancelar inscrição.");
-    }
-  };
-
-  //Emitir certificado
-  const handleEmitirCertificado = (tema: string) => {
-    toast.success("Certificado Emitido!", {
-      description: `Parabéns! Seu certificado para a palestra "${tema}" foi gerado com sucesso.`,
-      icon: <AwardIcon className="h-5 w-5" />,
-    });
-  };
-
-
-  //Excluir palestra
+  //Excluir palestra --> Requisito Funcional 2
   const handleDelete = async (id: string) => {
     try {
       const inscricoesQuery = query(
@@ -640,7 +615,31 @@ export default function PalestrasApp() {
     }
   };
 
-  //Abrir modal de inscrição via URL /palestra/[id]
+  //Cancelar inscrição
+  const handleCancelarInscricao = async (palestraId: string) => {
+    const inscricao = inscricoesUsuario.find((i) => i.palestraId === palestraId);
+    if (!inscricao) return;
+    try {
+      await deleteDoc(doc(db, "inscricoes", inscricao.id));
+      const palestraRef = doc(db, "palestras", palestraId);
+      await updateDoc(palestraRef, {
+        inscritos: increment(-1),
+      });
+      toast.info("Inscrição cancelada");
+    } catch (error) {
+      toast.error("Erro ao tentar cancelar inscrição.");
+    }
+  };
+
+  //Emitir certificado --> Requisito Funcional 5
+  const handleEmitirCertificado = (tema: string) => {
+    toast.success("Certificado Emitido!", {
+      description: `Parabéns! Seu certificado para a palestra "${tema}" foi gerado com sucesso.`,
+      icon: <AwardIcon className="h-5 w-5" />,
+    });
+  };
+
+  //Abrir modal de inscrição via URL /palestra/[id] --> Requisito Funcional 4
   useEffect(() => {
     const match = pathname.match(/^\/palestra\/(.+)$/);
     if (match && palestras.length > 0) {
@@ -650,7 +649,7 @@ export default function PalestrasApp() {
     }
   }, [pathname, palestras]);
 
-  //Modal de exclusão
+  //Modal de exclusão 
   const handleAbrirModalDelete = (id: string) => {
     setPalestraParaExcluir(id);
     setDeleteModalOpen(true);
@@ -666,19 +665,7 @@ export default function PalestrasApp() {
 
   return (
     <div className="min-h-screen bg-background font-sans flex flex-col">
-      {/* Navbar */}
-      <nav className="fixed top-0 left-0 w-full z-40 bg-card/80 backdrop-blur border-b border-border shadow-md flex items-center justify-between px-8 py-3">
-        <div className="flex-1 flex justify-center">
-          <span className="text-2xl font-bold text-primary tracking-tight select-none">
-            Certificadora3
-          </span>
-        </div>
-        <div className="flex items-center gap-2 absolute right-8">
-          <span className="text-muted-foreground text-sm mr-2 hidden sm:inline">
-            {usuarioNome} ({papel})
-          </span>
-        </div>
-      </nav>
+      <Toaster richColors position="top-right" />
 
       <div className="pt-20 flex-1">
         {modalRelatorio && (
@@ -754,7 +741,7 @@ export default function PalestrasApp() {
                 />
               )}
 
-              {/* FORMULÁRIO DE CRIAÇÃO/EDIÇÃO */}
+              {/* FORMULÁRIO DE CRIAÇÃO/EDIÇÃO DE PALESTRA*/}
               {(podeGerenciar || papel === "palestrante") && (
                 <div className="bg-card rounded-xl shadow-md p-6 mb-8 border border-border">
                   <h2 className="text-2xl font-bold mb-6 text-card-foreground">
@@ -934,20 +921,20 @@ export default function PalestrasApp() {
                                 )}
                               </div>
                             </div>
-                            {/* QR Code */}
+                            {/* QR Code --> Requisito Funcional 4*/}
                             <div className="flex flex-col items-center justify-center min-w-[120px]">
                               <a
                                 href={`${typeof window !== "undefined"
-                                    ? window.location.origin
-                                    : ""
+                                  ? window.location.origin
+                                  : ""
                                   }/palestra/${palestra.id}`}
                                 target="_self"
                                 rel="noopener noreferrer"
                               >
                                 <QRCodeSVG
                                   value={`${typeof window !== "undefined"
-                                      ? window.location.origin
-                                      : ""
+                                    ? window.location.origin
+                                    : ""
                                     }/palestra/${palestra.id}`}
                                   size={96}
                                   bgColor="#fff"
