@@ -179,3 +179,5 @@ npm run start
 ---
 
 📚 **Desenvolvido com dedicação para a disciplina _Certificadora 3_.**
+
+# Link do video de como instalar as ferramentas: https://youtu.be/DMZd5TtsKzM
