@@ -17,11 +17,9 @@ export default function RootLayout({
   return (
     <html>
       <body className="antialiased bg-gray-50 flex flex-col min-h-screen">
-        <Navbar />
-        <main>
+        <Providers>
           {children}
-        </main>
-        <Footer />
+        </Providers>
       </body>
     </html>
   );

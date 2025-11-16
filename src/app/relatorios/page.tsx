@@ -1,6 +1,8 @@
 "use client";
 import { useState, useMemo, useEffect } from "react";
-import { db } from "../firebase/page";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { db } from "../../lib/firebase";
 import { collection, onSnapshot } from "firebase/firestore";
 
 type Palestra = {
@@ -14,38 +16,21 @@ type Inscricao = {
   presente?: boolean;
 };
 
-const userProfiles = {
-  administrador: {
-    name: "Admin Joana",
-    email: "admin@aaaaaaa.com",
-    role: "administrador",
-  },
-  organizador: {
-    name: "Organizador Henry",
-    email: "organizador@gmail.com",
-    role: "organizador",
-  },
-  palestrante: {
-    name: "Palestrante Maria",
-    email: "palestrante@gmail.com",
-    role: "palestrante",
-  },
-  participante: {
-    name: "Participante João",
-    email: "participante@gmail.com",
-    role: "participante",
-  },
-};
-
-type UserRole = keyof typeof userProfiles;
-
 export default function Relatorios() {
-  const [currentUserRole, setCurrentUserRole] = useState<UserRole>("administrador");
-  const { role: papel } = userProfiles[currentUserRole];
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [palestras, setPalestras] = useState<Palestra[]>([]);
   const [inscricoes, setInscricoes] = useState<Inscricao[]>([]);
   const [loading, setLoading] = useState(true);
+  const papel = session?.user?.role || 'participante';
   const podeVerRelatorio = papel === "organizador" || papel === "administrador";
+
+  // Redireciona se não estiver logado
+  useEffect(() => {
+    if (status !== "loading" && !session) {
+      router.push('/');
+    }
+  }, [session, status, router]);
 
   // Carregar dados de palestras e inscrições
   useEffect(() => {
@@ -88,23 +73,15 @@ export default function Relatorios() {
     const totalPalestras = palestras.length;
     const totalInscricoes = inscricoes.length;
     const presencasConfirmadas = inscricoes.filter((i) => i.presente).length;
-    const percentualPresenca =
-      totalInscricoes > 0
-        ? ((presencasConfirmadas / totalInscricoes) * 100).toFixed(1)
-        : "0.0";
+
 
     const porPalestra = palestras.map((p) => {
       const inscricoesP = inscricoes.filter((i) => i.palestraId === p.id);
       const presentesP = inscricoesP.filter((i) => i.presente).length;
-      const percentualP =
-        inscricoesP.length > 0
-          ? ((presentesP / inscricoesP.length) * 100).toFixed(1)
-          : "0.0";
       return {
         tema: p.tema,
         totalInscritos: inscricoesP.length,
         presentes: presentesP,
-        percentual: percentualP,
       };
     });
 
@@ -112,7 +89,6 @@ export default function Relatorios() {
       totalPalestras,
       totalInscricoes,
       presencasConfirmadas,
-      percentualPresenca,
       porPalestra,
     };
   }, [palestras, inscricoes]);
@@ -134,43 +110,30 @@ export default function Relatorios() {
     );
   }
 
-  if (loading) {
+  if (status === "loading" || loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background via-secondary/30 to-background">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
         <p className="text-2xl text-foreground">Carregando relatórios...</p>
       </div>
     );
   }
 
+  // Se não estiver logado, não renderiza nada (aguarda redirect)
+  if (!session) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-secondary/30 to-background">
       <main className="flex-1 container mx-auto px-4 py-8">
-        {/* Simulador de contas */}
-        <div className="bg-card rounded-xl shadow-lg p-6 mb-8 border border-border">
-          <h2 className="text-xl font-semibold mb-4 text-card-foreground">
-            Visualizar como:
-          </h2>
-          <div className="flex flex-wrap gap-3">
-            {(Object.keys(userProfiles) as UserRole[]).map((role) => (
-              <button
-                key={role}
-                onClick={() => setCurrentUserRole(role)}
-                className={`px-6 py-2.5 rounded-lg font-medium transition-all duration-300 ${currentUserRole === role
-                  ? "bg-primary text-primary-foreground shadow-lg scale-105"
-                  : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-                  }`}
-              >
-                {userProfiles[role].name}
-              </button>
-            ))}
-          </div>
-        </div>
+
 
         <h1 className="text-4xl font-bold mb-8 text-foreground">
           Relatórios de Palestras
         </h1>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-gradient-to-br from-primary to-primary-hover rounded-xl shadow-lg p-6 text-primary-foreground">
             <h3 className="text-lg font-semibold mb-2 opacity-90">
               Total de Palestras
@@ -194,12 +157,7 @@ export default function Relatorios() {
             </p>
           </div>
 
-          <div className="bg-gradient-to-br from-secondary to-muted rounded-xl shadow-lg p-6 text-secondary-foreground">
-            <h3 className="text-lg font-semibold mb-2">Taxa de Presença</h3>
-            <p className="text-4xl font-bold">
-              {relatorios.percentualPresenca}%
-            </p>
-          </div>
+
         </div>
 
         <div className="bg-card rounded-xl shadow-lg border border-border overflow-hidden">
@@ -223,9 +181,6 @@ export default function Relatorios() {
                     <th className="text-center py-4 px-4 font-semibold text-foreground">
                       Presentes
                     </th>
-                    <th className="text-center py-4 px-4 font-semibold text-foreground">
-                      Taxa de Presença
-                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -242,18 +197,6 @@ export default function Relatorios() {
                       </td>
                       <td className="py-4 px-4 text-center text-success font-semibold">
                         {rel.presentes}
-                      </td>
-                      <td className="py-4 px-4 text-center">
-                        <span
-                          className={`inline-block px-3 py-1 rounded-full font-semibold ${parseFloat(rel.percentual) >= 70
-                            ? "bg-success/20 text-success"
-                            : parseFloat(rel.percentual) >= 40
-                              ? "bg-accent/20 text-accent"
-                              : "bg-destructive/20 text-destructive"
-                            }`}
-                        >
-                          {rel.percentual}%
-                        </span>
                       </td>
                     </tr>
                   ))}

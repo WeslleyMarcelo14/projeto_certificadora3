@@ -1,22 +1,30 @@
 "use client";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { db } from "../../firebase/page";
+import { useSession } from "next-auth/react";
+import { db } from "../../../lib/firebase";
 import { doc, getDoc, addDoc, collection, increment, updateDoc } from "firebase/firestore";
 import { Button } from "../../../components/ui/button";
-import { CalendarIcon, ClockIcon, MapPinIcon, UserIcon, UsersIcon } from "lucide-react";
+import { CalendarIcon, ClockIcon, MapPinIcon, UserIcon, UsersIcon, FileText, Link2, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 export default function PalestraDetalhe() {
   const { id } = useParams();
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [palestra, setPalestra] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  // Simulação de usuário logado (ajuste conforme seu contexto de autenticação)
-  const usuarioNome = "João";
-  const usuarioEmail = "participante@gmail.com";
+  const usuarioNome = session?.user?.name || '';
+  const usuarioEmail = session?.user?.email || '';
   const [inscrevendo, setInscrevendo] = useState(false);
   const [inscrito, setInscrito] = useState(false);
+
+  // Redireciona se não estiver logado
+  useEffect(() => {
+    if (status !== "loading" && !session) {
+      router.push('/');
+    }
+  }, [session, status, router]);
 
   useEffect(() => {
     if (!id) return;
@@ -56,7 +64,19 @@ export default function PalestraDetalhe() {
     }
   };
 
-  if (loading) return <div className="p-8">Carregando...</div>;
+  if (status === "loading" || loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-secondary/10 to-background">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
+        <p className="text-lg text-muted-foreground">Carregando...</p>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return null;  
+  }
+
   if (!palestra) return <div className="p-8">Palestra não encontrada.</div>;
 
   return (
@@ -69,8 +89,65 @@ export default function PalestraDetalhe() {
         <p className="flex items-center"><UserIcon className="h-4 w-4 mr-2" /> {palestra.palestrante}</p>
         <p className="flex items-center"><UsersIcon className="h-4 w-4 mr-2" /> {palestra.inscritos} / {palestra.vagas} vagas</p>
       </div>
+      {/* Descrição da Palestra */}
+      {palestra.descricao && (
+        <div className="mb-6 p-4 bg-muted/20 rounded-lg border">
+          <h3 className="font-semibold text-foreground mb-3 flex items-center">
+            <FileText className="h-5 w-5 mr-2" />
+            Sobre a Palestra
+          </h3>
+          <p className="text-muted-foreground leading-relaxed">{palestra.descricao}</p>
+        </div>
+      )}
+
       {inscrito ? (
-        <div className="text-green-600 font-semibold mb-4">Inscrição confirmada!</div>
+        <div className="space-y-4">
+          <div className="text-green-600 font-semibold mb-4 p-4 bg-green-50 rounded-lg border border-green-200">
+            ✅ Inscrição confirmada! Você tem acesso aos materiais da palestra.
+          </div>
+          
+          {/* Materiais da Palestra - só para inscritos */}
+          {palestra.materiais && palestra.materiais.length > 0 && (
+            <div className="bg-card/50 rounded-lg border p-6">
+              <h3 className="font-semibold text-foreground mb-4 flex items-center">
+                <Link2 className="h-5 w-5 mr-2" />
+                Links Importantes
+              </h3>
+              <div className="space-y-3">
+                {palestra.materiais.map((material: any, index: number) => (
+                  <div key={material.id || index} className="p-4 bg-muted/20 rounded-lg border">
+                    <div className="flex items-start">
+                      <div className="flex-shrink-0 mr-3 mt-1">
+                        <Link2 className="h-4 w-4 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center mb-2">
+                          <span className="font-medium text-foreground">{material.nome}</span>
+                          <span className="ml-2 text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+                            link
+                          </span>
+                        </div>
+                        {material.descricao && (
+                          <p className="text-sm text-muted-foreground mb-2">{material.descricao}</p>
+                        )}
+                        <div className="text-sm">
+                          <a 
+                            href={material.conteudo} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline font-mono bg-background/80 p-2 rounded border block"
+                          >
+                            {material.conteudo}
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       ) : (
         <Button onClick={handleInscrever} disabled={inscrevendo || palestra.inscritos >= palestra.vagas} className="w-full text-lg">
           {palestra.inscritos >= palestra.vagas ? "Vagas Esgotadas" : inscrevendo ? "Inscrevendo..." : "Confirmar Inscrição"}
