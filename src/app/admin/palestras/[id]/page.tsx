@@ -35,6 +35,8 @@ type Palestra = {
   vagas: number;
   inscritos: number;
   descricao?: string;
+  criadoPor?: string;
+  criadoPorEmail?: string;
 };
 
 export default function EditarPalestra() {
@@ -66,7 +68,7 @@ export default function EditarPalestra() {
 
   // Carregar palestra
   useEffect(() => {
-    if (!podeEditarPalestras || !id) return;
+    if (!podeEditarPalestras || !id || !session?.user?.id) return;
 
     const unsubscribe = onSnapshot(
       doc(db, "palestras", id as string),
@@ -76,6 +78,18 @@ export default function EditarPalestra() {
             id: snapshot.id,
             ...snapshot.data(),
           } as Palestra;
+          
+          // Verificar se organizador pode acessar esta palestra
+          if (session.user.role?.trim() === 'organizador') {
+            const podeAcessar = palestraData.criadoPor === session.user.id || 
+                              palestraData.criadoPorEmail === session.user.email;
+            
+            if (!podeAcessar) {
+              toast.error("Você só pode editar palestras que criou");
+              router.push('/admin/palestras');
+              return;
+            }
+          }
           
           setPalestra(palestraData);
           setFormData({

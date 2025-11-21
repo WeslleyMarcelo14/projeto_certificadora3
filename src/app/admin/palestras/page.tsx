@@ -47,6 +47,8 @@ type Palestra = {
     inscritos: number;
     descricao?: string;
     materiais?: Material[];
+    criadoPor?: string; // ID do usuário que criou a palestra
+    criadoPorEmail?: string; // Email do criador para referência
 };
 
 type Material = {
@@ -84,12 +86,12 @@ export default function AdminPalestras() {
 
     // Carregar palestras
     useEffect(() => {
-        if (!podeGerenciarPalestras) return;
+        if (!podeGerenciarPalestras || !session?.user?.id) return;
 
         const unsubscribe = onSnapshot(
             query(collection(db, "palestras"), orderBy("data", "asc")),
             (snapshot) => {
-                const palestrasData: Palestra[] = snapshot.docs.map((doc) => ({
+                const todasPalestras: Palestra[] = snapshot.docs.map((doc) => ({
                     id: doc.id,
                     tema: doc.data().tema,
                     data: doc.data().data,
@@ -101,8 +103,23 @@ export default function AdminPalestras() {
                     inscritos: doc.data().inscritos || 0,
                     descricao: doc.data().descricao || "",
                     materiais: doc.data().materiais || [],
+                    criadoPor: doc.data().criadoPor,
+                    criadoPorEmail: doc.data().criadoPorEmail,
                 }));
-                setPalestras(palestrasData);
+
+                // Filtrar palestras baseado no role
+                let palestrasFiltradas = todasPalestras;
+                
+                // Se for organizador, mostrar apenas suas próprias palestras
+                if (session.user.role?.trim() === 'organizador') {
+                    palestrasFiltradas = todasPalestras.filter(palestra => 
+                        palestra.criadoPor === session.user.id || 
+                        palestra.criadoPorEmail === session.user.email
+                    );
+                }
+                // Administradores veem todas as palestras (comportamento padrão)
+
+                setPalestras(palestrasFiltradas);
                 setLoading(false);
             },
             (error) => {
@@ -112,7 +129,7 @@ export default function AdminPalestras() {
         );
 
         return () => unsubscribe();
-    }, [podeGerenciarPalestras]);
+    }, [podeGerenciarPalestras, session?.user?.id, session?.user?.email, session?.user?.role]);
 
     const adicionarMaterial = async (palestraId: string) => {
         if (!novoMaterial.nome.trim() || !novoMaterial.conteudo.trim()) {

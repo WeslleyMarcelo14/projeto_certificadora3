@@ -65,6 +65,9 @@ export default function NovaPalestra() {
         inscritos: 0,
         descricao: formData.descricao,
         materiais: [],
+        criadoPor: session?.user?.id, // ID do usuário que está criando
+        criadoPorEmail: session?.user?.email, // Email para referência
+        criadoEm: new Date().toISOString(),
       });
 
       toast.success("Palestra criada com sucesso!");

@@ -42,6 +42,8 @@ type Palestra = {
   palestrante: string;
   vagas: number;
   inscritos: number;
+  criadoPor?: string;
+  criadoPorEmail?: string;
 };
 
 type Participante = {
@@ -74,7 +76,7 @@ export default function GerenciarParticipantes() {
 
   // Carregar palestra
   useEffect(() => {
-    if (!podeGerenciarParticipantes || !id) return;
+    if (!podeGerenciarParticipantes || !id || !session?.user?.id) return;
 
     const unsubscribePalestra = onSnapshot(
       doc(db, "palestras", id as string),
@@ -84,6 +86,19 @@ export default function GerenciarParticipantes() {
             id: snapshot.id,
             ...snapshot.data(),
           } as Palestra;
+          
+          // Verificar se organizador pode acessar esta palestra
+          if (session.user.role?.trim() === 'organizador') {
+            const podeAcessar = palestraData.criadoPor === session.user.id || 
+                              palestraData.criadoPorEmail === session.user.email;
+            
+            if (!podeAcessar) {
+              toast.error("Você só pode ver participantes de palestras que criou");
+              router.push('/admin/palestras');
+              return;
+            }
+          }
+          
           setPalestra(palestraData);
         } else {
           toast.error("Palestra não encontrada");
@@ -97,7 +112,7 @@ export default function GerenciarParticipantes() {
     );
 
     return () => unsubscribePalestra();
-  }, [podeGerenciarParticipantes, id, router]);
+  }, [podeGerenciarParticipantes, id, router, session?.user?.id, session?.user?.email, session?.user?.role]);
 
   // Carregar inscrições
   useEffect(() => {

@@ -8,6 +8,8 @@ import { Button } from "../../components/ui/button";
 import GoogleAuthButton from "../../components/GoogleAuthButton";
 import { Calendar, BarChart3, Users, ArrowRight, Settings } from "lucide-react";
 import { db } from "../../lib/firebase";
+import { where } from "firebase/firestore";
+import { setupCountListener, setupFirestoreListener } from "../../lib/firestore-utils";
 
 type Participante = {
   id: string;
@@ -16,7 +18,6 @@ type Participante = {
   email: string;
   presente?: boolean;
 };
-import { collection, onSnapshot, query, where } from "firebase/firestore";
 
 const Dashboard = () => {
   const { data: session, status } = useSession();
@@ -25,6 +26,15 @@ const Dashboard = () => {
   const [minhasInscricoes, setMinhasInscricoes] = useState<number>(0);
   const [loading, setLoading] = useState(true);
 
+  // Função para normalizar o role (remover espaços)
+  const getUserRole = () => {
+    return session?.user?.role?.trim().toLowerCase() || 'participante';
+  };
+
+  const isAdmin = () => getUserRole() === 'administrador';
+  const isOrganizer = () => getUserRole() === 'organizador';
+  const hasElevatedPermissions = () => isAdmin() || isOrganizer();
+
   // Redireciona para home se não estiver logado
   useEffect(() => {
     if (status !== "loading" && !session) {
@@ -32,52 +42,71 @@ const Dashboard = () => {
     }
   }, [session, status, router]);
 
-  // Buscar quantidade de palestras do Firebase
-  useEffect(() => {
-    if (!session) return;
-
-    const unsubscribePalestras = onSnapshot(
-      collection(db, "palestras"),
-      (snapshot) => {
-        setTotalPalestras(snapshot.docs.length);
-      },
-      (error) => {
-        console.error("Erro ao buscar palestras:", error);
-      }
-    );
-
-    return () => unsubscribePalestras();
-  }, [session]);
-
-  // Buscar inscrições do usuário
+  // Buscar dados do Firebase usando utilitários seguros
   useEffect(() => {
     if (!session?.user?.email) return;
 
-    const unsubscribeParticipantes = onSnapshot(
-      query(
-        collection(db, "participantes"),
-        where("email", "==", session.user.email)
-      ),
-      (snapshot) => {
-        const participantesData = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          palestraId: doc.data().palestraId,
-          nome: doc.data().nome,
-          email: doc.data().email,
-          presente: doc.data().presente || false,
-        }));
-        
-        setMinhasInscricoes(participantesData.length);
-        setLoading(false);
-      },
-      (error) => {
-        console.error("Erro ao buscar participantes:", error);
+    let cleanupPalestras: (() => void) | null = null;
+    let cleanupParticipantes: (() => void) | null = null;
+
+    const setupListeners = () => {
+      try {
+        // Para organizadores, contar apenas suas próprias palestras
+        if (isOrganizer()) {
+          // Buscar palestras criadas por este organizador
+          cleanupPalestras = setupFirestoreListener(
+            "palestras",
+            (palestrasData: any[]) => {
+              const minhasPalestras = palestrasData.filter(palestra => 
+                palestra.criadoPor === session.user.id || 
+                palestra.criadoPorEmail === session.user.email
+              );
+              setTotalPalestras(minhasPalestras.length);
+            },
+            (error) => {
+              console.error("Erro ao buscar palestras:", error);
+              setLoading(false);
+            }
+          );
+        } else {
+          // Administradores e participantes veem todas as palestras
+          cleanupPalestras = setupCountListener(
+            "palestras",
+            (count) => setTotalPalestras(count),
+            (error) => {
+              console.error("Erro ao buscar palestras:", error);
+              setLoading(false);
+            }
+          );
+        }
+
+        // Setup participantes listener - participantes veem suas inscrições
+        // Organizadores e admins veem suas inscrições como participantes
+        cleanupParticipantes = setupFirestoreListener<Participante>(
+          "participantes",
+          (participantesData) => {
+            setMinhasInscricoes(participantesData.length);
+            setLoading(false);
+          },
+          (error) => {
+            console.error("Erro ao buscar participantes:", error);
+            setLoading(false);
+          },
+          [where("email", "==", session.user.email)]
+        );
+      } catch (error) {
+        console.error("Erro ao configurar listeners:", error);
         setLoading(false);
       }
-    );
+    };
 
-    return () => unsubscribeParticipantes();
-  }, [session?.user?.email]);
+    setupListeners();
+
+    return () => {
+      if (cleanupPalestras) cleanupPalestras();
+      if (cleanupParticipantes) cleanupParticipantes();
+    };
+  }, [session?.user?.email, session?.user?.id, session?.user?.role]);
 
   if (status === "loading") {
     return (
@@ -140,9 +169,10 @@ const Dashboard = () => {
             </div>
           </Link>
 
-          {/* Card Relatórios */}
-          <Link href="/relatorios" className="group">
-            <div className="bg-card/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 border border-border hover:shadow-2xl hover:border-accent/50 transition-all duration-500 group-hover:scale-105 group-hover:-translate-y-2 relative overflow-hidden">
+          {/* Card Relatórios - apenas para administradores e organizadores */}
+          {hasElevatedPermissions() && (
+            <Link href="/relatorios" className="group">
+              <div className="bg-card/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 border border-border hover:shadow-2xl hover:border-accent/50 transition-all duration-500 group-hover:scale-105 group-hover:-translate-y-2 relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               <div className="relative z-10">
                 <div className="flex items-center justify-center w-20 h-20 bg-gradient-to-br from-accent/20 to-accent/10 rounded-2xl mb-8 group-hover:scale-110 transition-transform duration-300">
@@ -160,10 +190,11 @@ const Dashboard = () => {
                 </div>
               </div>
             </div>
-          </Link>
+            </Link>
+          )}
 
           {/* Card Gerenciar Palestras - para administradores e organizadores */}
-          {(session.user?.role === "administrador" || session.user?.role === "organizador") && (
+          {hasElevatedPermissions() && (
             <Link href="/admin/palestras" className="group">
               <div className="bg-card/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 border border-border hover:shadow-2xl hover:border-orange-500/50 transition-all duration-500 group-hover:scale-105 group-hover:-translate-y-2 relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
@@ -187,7 +218,7 @@ const Dashboard = () => {
           )}
 
           {/* Card Gestão - só aparece para administradores */}
-          {session.user?.role === "administrador" ? (
+          {isAdmin() && (
             <Link href="/admin/users" className="group">
               <div className="bg-card/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 border border-border hover:shadow-2xl hover:border-success/50 transition-all duration-500 group-hover:scale-105 group-hover:-translate-y-2 relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-success/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
@@ -208,30 +239,6 @@ const Dashboard = () => {
                 </div>
               </div>
             </Link>
-          ) : (
-            <div className="bg-card/60 backdrop-blur-sm rounded-2xl shadow-lg p-8 border border-border/50 opacity-75 relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-muted/10 to-transparent"></div>
-              <div className="relative z-10">
-                <div className="flex items-center justify-center w-20 h-20 bg-muted/20 rounded-2xl mb-8">
-                  <Users className="h-10 w-10 text-muted-foreground" />
-                </div>
-                <h3 className="text-2xl font-bold text-foreground mb-4">
-                  Gestão
-                </h3>
-                <p className="text-muted-foreground mb-8 leading-relaxed">
-                  Organize eventos, gerencie inscrições e acompanhe a participação em tempo real
-                </p>
-                <div className="flex items-center text-muted-foreground font-semibold">
-                  <span className="relative">
-                    Apenas Administradores
-                    <span className="absolute -top-1 -right-8 flex h-3 w-3">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary/50 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
-                    </span>
-                  </span>
-                </div>
-              </div>
-            </div>
           )}
 
         </div>
@@ -254,7 +261,14 @@ const Dashboard = () => {
                     totalPalestras
                   )}
                 </div>
-                <div className="text-muted-foreground font-medium">Palestras Disponíveis</div>
+                <div className="text-muted-foreground font-medium">
+                  {isOrganizer() ? "Minhas Palestras" : "Palestras Disponíveis"}
+                </div>
+                {isOrganizer() && (
+                  <div className="text-xs text-muted-foreground/70 mt-1">
+                    Palestras que você criou
+                  </div>
+                )}
               </div>
               <div className="text-center group">
                 <div className="text-4xl font-bold text-accent mb-2 group-hover:scale-110 transition-transform duration-300">
@@ -265,6 +279,9 @@ const Dashboard = () => {
                   )}
                 </div>
                 <div className="text-muted-foreground font-medium">Minhas Inscrições</div>
+                <div className="text-xs text-muted-foreground/70 mt-1">
+                  Como participante
+                </div>
               </div>
 
             </div>
