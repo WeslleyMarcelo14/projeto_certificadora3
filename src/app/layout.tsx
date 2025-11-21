@@ -16,9 +16,11 @@ export default function RootLayout({
 }>) {
   return (
     <html>
-      <body className="antialiased bg-gray-50 flex flex-col min-h-screen">
+      <body className="antialiased bg-gray-50 flex flex-col min-h-screen overflow-x-hidden">
         <Providers>
-          {children}
+          <div className="flex flex-col min-h-screen w-full">
+            {children}
+          </div>
         </Providers>
       </body>
     </html>

@@ -286,30 +286,30 @@ export default function PalestrasPage() {
             {filteredPalestras.map((palestra) => (
               <div 
                 key={palestra.id} 
-                className="bg-card rounded-xl shadow-md p-6 border border-border hover:shadow-lg transition-shadow"
+                className="bg-card rounded-xl shadow-md p-4 sm:p-6 border border-border hover:shadow-lg transition-shadow"
               >
                 <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4">
                   <div className="flex-1">
-                    <h3 className="text-xl font-bold text-card-foreground mb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-card-foreground mb-2">
                       {palestra.tema || 'Título não informado'}
                     </h3>
                     
-                    <div className="flex flex-wrap gap-4 mb-4 text-sm text-muted-foreground">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap gap-2 sm:gap-4 mb-4 text-xs sm:text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
-                        {palestra.data ? formatarData(palestra.data) : 'Data não informada'}
+                        <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
+                        <span className="truncate">{palestra.data ? formatarData(palestra.data) : 'Data não informada'}</span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
-                        {palestra.horario || 'Horário não informado'}
+                        <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
+                        <span className="truncate">{palestra.horario || 'Horário não informado'}</span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <MapPin className="h-4 w-4" />
-                        {palestra.local || 'Local não informado'}
+                        <MapPin className="h-3 w-3 sm:h-4 sm:w-4" />
+                        <span className="truncate">{palestra.local || 'Local não informado'}</span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <Users className="h-4 w-4" />
-                        {palestra.participantes || 0}/{palestra.vagas} vagas
+                        <Users className="h-3 w-3 sm:h-4 sm:w-4" />
+                        <span className="whitespace-nowrap">{palestra.participantes || 0}/{palestra.vagas} vagas</span>
                       </div>
                     </div>
 
@@ -362,18 +362,19 @@ export default function PalestrasPage() {
                       
                       if (inscricoes.has(palestra.id)) {
                         return (
-                          <div className="flex flex-col lg:flex-row gap-2 w-full lg:w-auto">
-                            <Button disabled variant="outline" className="w-full lg:w-auto">
+                          <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
+                            <Button disabled variant="outline" className="w-full sm:w-auto lg:w-auto text-sm">
                               ✓ Inscrito
                             </Button>
                             <Button 
                               onClick={() => cancelarInscricao(palestra.id)}
                               variant="destructive"
                               size="sm"
-                              className="w-full lg:w-auto"
+                              className="w-full sm:w-auto lg:w-auto text-sm"
                             >
-                              <X className="h-4 w-4 mr-2" />
-                              Cancelar
+                              <X className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                              <span className="hidden sm:inline">Cancelar</span>
+                              <span className="sm:hidden">Sair</span>
                             </Button>
                           </div>
                         );

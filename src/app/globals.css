@@ -164,3 +164,104 @@
   animation: gradient-x 15s ease infinite;
   background-size: 200% 200%;
 }
+
+/* Regras de responsividade global */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  overflow-x: hidden;
+  min-width: 320px;
+}
+
+/* Garantir que imagens sejam responsivas por padrão */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Melhorar o texto em dispositivos pequenos */
+@media (max-width: 640px) {
+  h1, h2, h3, h4, h5, h6 {
+    word-wrap: break-word;
+    hyphens: auto;
+  }
+  
+  /* Melhorar botões em dispositivos móveis */
+  button {
+    min-height: 44px; /* Tamanho mínimo recomendado para toque */
+  }
+  
+  /* Melhorar inputs em dispositivos móveis */
+  input, textarea, select {
+    min-height: 44px;
+    font-size: 16px; /* Previne zoom automático no iOS */
+  }
+}
+
+/* Garantir que tabelas sejam responsivas */
+@media (max-width: 768px) {
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}
+
+/* Utilities responsivas personalizadas */
+.container-responsive {
+  width: 100%;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .container-responsive {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container-responsive {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+/* Line clamp utilities para truncar texto */
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-4 {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
