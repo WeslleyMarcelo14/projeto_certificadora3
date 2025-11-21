@@ -346,57 +346,68 @@ export default function PalestrasPage() {
                   </div>
 
                   <div className="flex-shrink-0">
-                    {(() => {
-                      // Verificar se é o criador da palestra
-                      const isCriador = palestra.criadoPor === session?.user?.id || 
-                                       palestra.criadoPorEmail === session?.user?.email ||
-                                       palestra.palestranteEmail === session?.user?.email;
+                    <div className="flex flex-col gap-2 w-full lg:w-auto">
+                      {/* Botão Ver Detalhes - SEMPRE visível */}
+                      <Button 
+                        onClick={() => router.push(`/palestra/${palestra.id}`)}
+                        variant="outline"
+                        className="w-full lg:w-auto"
+                      >
+                        Ver Detalhes
+                      </Button>
                       
-                      if (isCriador) {
+                      {/* Botão de Ação Principal */}
+                      {(() => {
+                        // Verificar se é o criador da palestra
+                        const isCriador = palestra.criadoPor === session?.user?.id || 
+                                         palestra.criadoPorEmail === session?.user?.email ||
+                                         palestra.palestranteEmail === session?.user?.email;
+                        
+                        if (isCriador) {
+                          return (
+                            <Button disabled variant="secondary" className="w-full lg:w-auto">
+                              Sua Palestra
+                            </Button>
+                          );
+                        }
+                        
+                        if (inscricoes.has(palestra.id)) {
+                          return (
+                            <div className="flex flex-col gap-2 w-full lg:w-auto">
+                              <Button disabled variant="outline" className="w-full lg:w-auto text-sm">
+                                ✓ Inscrito
+                              </Button>
+                              <Button 
+                                onClick={() => cancelarInscricao(palestra.id)}
+                                variant="destructive"
+                                size="sm"
+                                className="w-full lg:w-auto text-sm"
+                              >
+                                <X className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                                Cancelar Inscrição
+                              </Button>
+                            </div>
+                          );
+                        }
+                        
+                        if (palestra.participantes >= palestra.vagas) {
+                          return (
+                            <Button disabled className="w-full lg:w-auto">
+                              Vagas Esgotadas
+                            </Button>
+                          );
+                        }
+                        
                         return (
-                          <Button disabled variant="secondary" className="w-full lg:w-auto">
-                            Sua Palestra
+                          <Button 
+                            onClick={() => inscreverNaPalestra(palestra.id)}
+                            className="w-full lg:w-auto"
+                          >
+                            Inscrever-se
                           </Button>
                         );
-                      }
-                      
-                      if (inscricoes.has(palestra.id)) {
-                        return (
-                          <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
-                            <Button disabled variant="outline" className="w-full sm:w-auto lg:w-auto text-sm">
-                              ✓ Inscrito
-                            </Button>
-                            <Button 
-                              onClick={() => cancelarInscricao(palestra.id)}
-                              variant="destructive"
-                              size="sm"
-                              className="w-full sm:w-auto lg:w-auto text-sm"
-                            >
-                              <X className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                              <span className="hidden sm:inline">Cancelar</span>
-                              <span className="sm:hidden">Sair</span>
-                            </Button>
-                          </div>
-                        );
-                      }
-                      
-                      if (palestra.participantes >= palestra.vagas) {
-                        return (
-                          <Button disabled className="w-full lg:w-auto">
-                            Vagas Esgotadas
-                          </Button>
-                        );
-                      }
-                      
-                      return (
-                        <Button 
-                          onClick={() => inscreverNaPalestra(palestra.id)}
-                          className="w-full lg:w-auto"
-                        >
-                          Inscrever-se
-                        </Button>
-                      );
-                    })()}
+                      })()}
+                    </div>
                   </div>
                 </div>
               </div>

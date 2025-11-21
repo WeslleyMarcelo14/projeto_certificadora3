@@ -61,11 +61,6 @@ export default function PalestraDetalhe() {
     verificarInscricao();
   }, [id, usuarioEmail]);
 
-
-
-  // Verifica se já está inscrito (opcional: pode ser melhorado para buscar do Firestore)
-  // ...
-
   const handleInscrever = async () => {
     if (!palestra || !usuarioNome || !usuarioEmail) return;
     
@@ -116,15 +111,28 @@ export default function PalestraDetalhe() {
   }
 
   return (
-    <div className="container mx-auto max-w-4xl p-4 sm:p-6 lg:p-8">
-      <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 sm:mb-6 break-words">{palestra.tema}</h1>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 mb-6 text-sm sm:text-base text-muted-foreground">
-        <p className="flex items-center break-all"><CalendarIcon className="h-4 w-4 mr-2 flex-shrink-0" /> <span className="truncate">{new Date(palestra.data + "T00:00").toLocaleDateString("pt-BR", { timeZone: "UTC" })}</span></p>
-        <p className="flex items-center"><ClockIcon className="h-4 w-4 mr-2 flex-shrink-0" /> <span className="truncate">{palestra.horario}</span></p>
-        <p className="flex items-center break-all"><MapPinIcon className="h-4 w-4 mr-2 flex-shrink-0" /> <span className="truncate">{palestra.local}</span></p>
-        <p className="flex items-center break-all"><UserIcon className="h-4 w-4 mr-2 flex-shrink-0" /> <span className="truncate">{palestra.palestrante}</span></p>
-        <p className="flex items-center col-span-1 sm:col-span-2"><UsersIcon className="h-4 w-4 mr-2 flex-shrink-0" /> {palestra.inscritos} / {palestra.vagas} vagas</p>
+    <div className="container mx-auto max-w-4xl p-8">
+      <h1 className="text-3xl font-bold mb-4">{palestra.tema}</h1>
+      
+      <div className="space-y-2 mb-6 text-muted-foreground">
+        <p className="flex items-center">
+          <CalendarIcon className="h-4 w-4 mr-2" /> 
+          {new Date(palestra.data + "T00:00").toLocaleDateString("pt-BR", { timeZone: "UTC" })}
+        </p>
+        <p className="flex items-center">
+          <ClockIcon className="h-4 w-4 mr-2" /> {palestra.horario}
+        </p>
+        <p className="flex items-center">
+          <MapPinIcon className="h-4 w-4 mr-2" /> {palestra.local}
+        </p>
+        <p className="flex items-center">
+          <UserIcon className="h-4 w-4 mr-2" /> {palestra.palestrante}
+        </p>
+        <p className="flex items-center">
+          <UsersIcon className="h-4 w-4 mr-2" /> {palestra.inscritos} / {palestra.vagas} vagas
+        </p>
       </div>
+      
       {/* Descrição da Palestra */}
       {palestra.descricao && (
         <div className="mb-6 p-4 bg-muted/20 rounded-lg border">
@@ -137,18 +145,18 @@ export default function PalestraDetalhe() {
       )}
 
       {/* QR Code para Divulgação da Palestra */}
-      <div className="mb-6 bg-gradient-to-br from-primary/5 via-accent/5 to-success/5 rounded-lg border-2 border-dashed border-primary/30 p-4 sm:p-6">
-        <h3 className="font-semibold text-base sm:text-lg text-foreground mb-4 flex items-center">
-          <Award className="h-5 w-5 mr-2 text-primary flex-shrink-0" />
-          <span className="break-words">Compartilhar Palestra</span>
+      <div className="mb-6 bg-gradient-to-br from-primary/5 via-accent/5 to-success/5 rounded-lg border-2 border-dashed border-primary/30 p-6">
+        <h3 className="font-semibold text-foreground mb-4 flex items-center">
+          <Award className="h-5 w-5 mr-2 text-primary" />
+          Compartilhar Palestra
         </h3>
         
-        <div className="flex flex-col xl:flex-row items-center gap-4 sm:gap-6">
-          <div className="flex-1 text-center xl:text-left">
-            <p className="text-sm sm:text-base text-muted-foreground mb-4 px-2 sm:px-0">
+        <div className="flex flex-col lg:flex-row items-center gap-6">
+          <div className="flex-1 text-center lg:text-left">
+            <p className="text-muted-foreground mb-4">
               Compartilhe este QR Code nas redes sociais ou envie para outras pessoas se inscreverem na palestra:
             </p>
-            <div className="bg-white p-3 sm:p-4 rounded-lg inline-block shadow-sm border">
+            <div className="bg-white p-4 rounded-lg inline-block shadow-sm border">
               <QRCodeCanvas 
                 value={typeof window !== 'undefined' ? 
                   `${window.location.origin}/palestra/${id}` :
@@ -157,25 +165,23 @@ export default function PalestraDetalhe() {
                 size={128}
                 level="M"
                 includeMargin={true}
-                className="w-20 h-20 sm:w-32 sm:h-32"
               />
             </div>
           </div>
           
-          <div className="flex-1 bg-white/50 rounded-lg p-3 sm:p-4 border w-full">
-            <h4 className="font-semibold text-sm sm:text-base text-foreground mb-2">Informações da Palestra:</h4>
-            <div className="space-y-1 text-xs sm:text-sm text-muted-foreground">
-              <p className="break-words"><strong>Tema:</strong> <span className="break-all">{palestra.tema}</span></p>
+          <div className="flex-1 bg-white/50 rounded-lg p-4 border">
+            <h4 className="font-semibold text-foreground mb-2">Informações da Palestra:</h4>
+            <div className="space-y-1 text-sm text-muted-foreground">
+              <p><strong>Tema:</strong> {palestra.tema}</p>
               <p><strong>Data:</strong> {new Date(palestra.data + "T00:00").toLocaleDateString("pt-BR", { timeZone: "UTC" })}</p>
               <p><strong>Horário:</strong> {palestra.horario}</p>
-              <p className="break-words"><strong>Local:</strong> <span className="break-all">{palestra.local}</span></p>
-              <p className="break-words"><strong>Palestrante:</strong> <span className="break-all">{palestra.palestrante}</span></p>
+              <p><strong>Local:</strong> {palestra.local}</p>
+              <p><strong>Palestrante:</strong> {palestra.palestrante}</p>
               <p><strong>Vagas:</strong> {palestra.inscritos} / {palestra.vagas}</p>
             </div>
             
             <Button 
-              className="w-full mt-3 sm:mt-4 text-xs sm:text-sm" 
-              size="sm"
+              className="w-full mt-4" 
               onClick={() => {
                 if (typeof window !== 'undefined') {
                   const palestraUrl = `${window.location.origin}/palestra/${id}`;
@@ -184,8 +190,8 @@ export default function PalestraDetalhe() {
                 }
               }}
             >
-              <Link2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              Copiar Link
+              <Link2 className="h-4 w-4 mr-2" />
+              Copiar Link da Palestra
             </Button>
           </div>
         </div>
@@ -288,7 +294,10 @@ export default function PalestraDetalhe() {
           );
         })()
       )}
-      <Button variant="outline" className="w-full mt-4" onClick={() => router.push("/palestra")}>Voltar</Button>
+      
+      <Button variant="outline" className="w-full mt-4" onClick={() => router.push("/palestra")}>
+        Voltar
+      </Button>
     </div>
   );
 }

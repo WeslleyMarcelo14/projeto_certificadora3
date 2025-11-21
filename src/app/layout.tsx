@@ -15,10 +15,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html>
+    <html className="overflow-x-hidden">
       <body className="antialiased bg-gray-50 flex flex-col min-h-screen overflow-x-hidden">
         <Providers>
-          <div className="flex flex-col min-h-screen w-full">
+          <div className="flex flex-col min-h-screen w-full max-w-full overflow-x-hidden">
             {children}
           </div>
         </Providers>

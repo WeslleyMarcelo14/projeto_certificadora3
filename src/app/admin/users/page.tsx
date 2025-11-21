@@ -167,18 +167,18 @@ export default function AdminUsers() {
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary/10 to-background">
       {/* Header */}
       <header className="bg-card/50 backdrop-blur-sm shadow-sm border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/10 rounded-2xl">
-              <Shield className="h-8 w-8 text-primary" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-primary/20 to-primary/10 rounded-2xl flex-shrink-0">
+              <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
             </div>
-            <div>
-              <h1 className="text-3xl font-bold text-foreground mb-2">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
                 <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                   Gestão de Usuários
                 </span>
               </h1>
-              <p className="text-muted-foreground text-lg">
+              <p className="text-muted-foreground text-sm sm:text-base lg:text-lg">
                 Gerencie cargos e permissões dos usuários do sistema
               </p>
             </div>
@@ -186,24 +186,24 @@ export default function AdminUsers() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* Estatísticas */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
           {Object.entries(roleInfo).map(([role, info]) => {
             const count = users.filter(u => u.role === role).length;
             const Icon = info.icon;
             
             return (
-              <div key={role} className="bg-card/80 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-border">
+              <div key={role} className="bg-card/80 backdrop-blur-sm rounded-xl shadow-lg p-4 sm:p-6 border border-border">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground mb-1">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs sm:text-sm font-medium text-muted-foreground mb-1 truncate">
                       {info.label}
                     </p>
-                    <p className="text-2xl font-bold text-foreground">{count}</p>
+                    <p className="text-xl sm:text-2xl font-bold text-foreground">{count}</p>
                   </div>
-                  <div className={`p-3 rounded-full ${info.color}`}>
-                    <Icon className="h-6 w-6" />
+                  <div className={`p-2 sm:p-3 rounded-full ${info.color} flex-shrink-0`}>
+                    <Icon className="h-4 w-4 sm:h-6 sm:w-6" />
                   </div>
                 </div>
               </div>
@@ -212,10 +212,10 @@ export default function AdminUsers() {
         </div>
 
         {/* Filtros */}
-        <div className="bg-card/80 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-border mb-8">
-          <div className="flex flex-col md:flex-row gap-4">
+        <div className="bg-card/80 backdrop-blur-sm rounded-xl shadow-lg p-4 sm:p-6 border border-border mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
-              <Label htmlFor="search" className="text-sm font-medium text-foreground mb-2">
+              <Label htmlFor="search" className="text-sm font-medium text-foreground mb-2 block">
                 Buscar usuários
               </Label>
               <Input
@@ -226,8 +226,8 @@ export default function AdminUsers() {
                 className="w-full"
               />
             </div>
-            <div className="md:w-64">
-              <Label htmlFor="role-filter" className="text-sm font-medium text-foreground mb-2">
+            <div className="sm:w-48 lg:w-64">
+              <Label htmlFor="role-filter" className="text-sm font-medium text-foreground mb-2 block">
                 Filtrar por cargo
               </Label>
               <Select value={selectedRole} onValueChange={setSelectedRole}>
@@ -277,43 +277,44 @@ export default function AdminUsers() {
                   return (
                     <div
                       key={user.id}
-                      className="flex items-center justify-between p-4 bg-muted/20 rounded-lg border border-border hover:bg-muted/40 transition-colors"
+                      className="flex flex-col lg:flex-row lg:items-center lg:justify-between p-4 bg-muted/20 rounded-lg border border-border hover:bg-muted/40 transition-colors gap-4"
                     >
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-r from-primary/20 to-accent/20 flex items-center justify-center">
+                      <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-r from-primary/20 to-accent/20 flex items-center justify-center flex-shrink-0">
                           {user.image ? (
                             <img 
                               src={user.image} 
                               alt={user.name}
-                              className="w-12 h-12 rounded-full object-cover"
+                              className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover"
                             />
                           ) : (
-                            <User className="h-6 w-6 text-primary" />
+                            <User className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                           )}
                         </div>
-                        <div>
-                          <h3 className="font-semibold text-foreground">{user.name}</h3>
-                          <p className="text-sm text-muted-foreground">{user.email}</p>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-semibold text-foreground text-sm sm:text-base truncate">{user.name}</h3>
+                          <p className="text-xs sm:text-sm text-muted-foreground truncate">{user.email}</p>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-4">
-                        <div className="text-right">
-                          <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${roleConfig?.color || 'text-gray-600 bg-gray-100'}`}>
-                            <RoleIcon className="h-4 w-4" />
-                            {roleConfig?.label || user.role}
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+                        <div className="text-left sm:text-right">
+                          <div className={`inline-flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${roleConfig?.color || 'text-gray-600 bg-gray-100'}`}>
+                            <RoleIcon className="h-3 w-3 sm:h-4 sm:w-4" />
+                            <span className="hidden sm:inline">{roleConfig?.label || user.role}</span>
+                            <span className="sm:hidden">{roleConfig?.label?.slice(0,4) || user.role}</span>
                           </div>
-                          <p className="text-xs text-muted-foreground mt-1">
+                          <p className="text-xs text-muted-foreground mt-1 hidden lg:block max-w-[200px]">
                             {roleConfig?.description || 'Cargo não definido'}
                           </p>
                         </div>
 
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 w-full sm:w-auto">
                           <Select
                             value={user.role}
                             onValueChange={(newRole) => updateUserRole(user.id, newRole)}
                           >
-                            <SelectTrigger className="w-40">
+                            <SelectTrigger className="w-full sm:w-32 lg:w-40 text-xs sm:text-sm">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -329,8 +330,10 @@ export default function AdminUsers() {
                             size="sm"
                             onClick={() => deleteUser(user.id)}
                             disabled={user.id === session?.user?.id}
+                            className="flex-shrink-0"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                            <span className="hidden sm:inline ml-2">Remover</span>
                           </Button>
                         </div>
                       </div>
@@ -343,12 +346,12 @@ export default function AdminUsers() {
         </div>
 
         {/* Instruções */}
-        <div className="mt-8 bg-primary/5 rounded-xl p-6 border border-primary/20">
-          <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-            <Shield className="h-5 w-5 text-primary" />
+        <div className="mt-6 sm:mt-8 bg-primary/5 rounded-xl p-4 sm:p-6 border border-primary/20">
+          <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2 text-sm sm:text-base">
+            <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
             Como gerenciar usuários
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
             <div>
               <p className="mb-2">
                 <strong>✅ Alteração automática:</strong> Os usuários são automaticamente adicionados quando fazem login com Google.
