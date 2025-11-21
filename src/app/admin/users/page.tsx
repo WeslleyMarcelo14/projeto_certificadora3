@@ -69,8 +69,10 @@ export default function AdminUsers() {
 
   // Verificar se é administrador
   useEffect(() => {
-    if (status !== "loading" && (!session || session.user?.role !== "administrador")) {
-      router.push('/dashboard');
+    if (status === "unauthenticated") {
+      router.push("/dashboard");
+    } else if (status === "authenticated" && session.user?.role !== "administrador") {
+      router.push("/dashboard");
     }
   }, [session, status, router]);
 

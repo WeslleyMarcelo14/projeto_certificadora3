@@ -17,9 +17,12 @@ interface Palestra {
   local: string;
   descricao: string;
   palestrante: string;
+  palestranteEmail?: string;
   vagas: number;
   participantes: number;
   materiais?: { nome: string; conteudo: string; descricao?: string }[];
+  criadoPor?: string;
+  criadoPorEmail?: string;
 }
 
 export default function PalestrasPage() {
@@ -143,6 +146,16 @@ export default function PalestrasPage() {
       // Verificar vagas disponíveis
       const palestraDoc = await getDoc(doc(db, 'palestras', palestraId));
       const palestraData = palestraDoc.data();
+      
+      // Verificar se o usuário é o criador da palestra
+      if (palestraData && (
+        palestraData.criadoPor === session.user.id || 
+        palestraData.criadoPorEmail === session.user.email ||
+        palestraData.palestranteEmail === session.user.email
+      )) {
+        alert('Você não pode se inscrever na sua própria palestra!');
+        return;
+      }
       
       if (palestraData && (palestraData.inscritos || 0) >= palestraData.vagas) {
         alert('Esta palestra não possui mais vagas disponíveis!');
@@ -333,33 +346,56 @@ export default function PalestrasPage() {
                   </div>
 
                   <div className="flex-shrink-0">
-                    {inscricoes.has(palestra.id) ? (
-                      <div className="flex flex-col lg:flex-row gap-2 w-full lg:w-auto">
-                        <Button disabled variant="outline" className="w-full lg:w-auto">
-                          ✓ Inscrito
-                        </Button>
+                    {(() => {
+                      // Verificar se é o criador da palestra
+                      const isCriador = palestra.criadoPor === session?.user?.id || 
+                                       palestra.criadoPorEmail === session?.user?.email ||
+                                       palestra.palestranteEmail === session?.user?.email;
+                      
+                      if (isCriador) {
+                        return (
+                          <Button disabled variant="secondary" className="w-full lg:w-auto">
+                            Sua Palestra
+                          </Button>
+                        );
+                      }
+                      
+                      if (inscricoes.has(palestra.id)) {
+                        return (
+                          <div className="flex flex-col lg:flex-row gap-2 w-full lg:w-auto">
+                            <Button disabled variant="outline" className="w-full lg:w-auto">
+                              ✓ Inscrito
+                            </Button>
+                            <Button 
+                              onClick={() => cancelarInscricao(palestra.id)}
+                              variant="destructive"
+                              size="sm"
+                              className="w-full lg:w-auto"
+                            >
+                              <X className="h-4 w-4 mr-2" />
+                              Cancelar
+                            </Button>
+                          </div>
+                        );
+                      }
+                      
+                      if (palestra.participantes >= palestra.vagas) {
+                        return (
+                          <Button disabled className="w-full lg:w-auto">
+                            Vagas Esgotadas
+                          </Button>
+                        );
+                      }
+                      
+                      return (
                         <Button 
-                          onClick={() => cancelarInscricao(palestra.id)}
-                          variant="destructive"
-                          size="sm"
+                          onClick={() => inscreverNaPalestra(palestra.id)}
                           className="w-full lg:w-auto"
                         >
-                          <X className="h-4 w-4 mr-2" />
-                          Cancelar
+                          Inscrever-se
                         </Button>
-                      </div>
-                    ) : palestra.participantes >= palestra.vagas ? (
-                      <Button disabled className="w-full lg:w-auto">
-                        Vagas Esgotadas
-                      </Button>
-                    ) : (
-                      <Button 
-                        onClick={() => inscreverNaPalestra(palestra.id)}
-                        className="w-full lg:w-auto"
-                      >
-                        Inscrever-se
-                      </Button>
-                    )}
+                      );
+                    })()}
                   </div>
                 </div>
               </div>

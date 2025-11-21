@@ -33,14 +33,15 @@ const Dashboard = () => {
 
   const isAdmin = () => getUserRole() === 'administrador';
   const isOrganizer = () => getUserRole() === 'organizador';
-  const hasElevatedPermissions = () => isAdmin() || isOrganizer();
+  const isPalestrante = () => getUserRole() === 'palestrante';
+  const hasElevatedPermissions = () => isAdmin() || isOrganizer() || isPalestrante();
 
   // Redireciona para home se não estiver logado
   useEffect(() => {
-    if (status !== "loading" && !session) {
+    if (status === "unauthenticated") {
       router.push('/');
     }
-  }, [session, status, router]);
+  }, [status, router]);
 
   // Buscar dados do Firebase usando utilitários seguros
   useEffect(() => {
@@ -51,9 +52,9 @@ const Dashboard = () => {
 
     const setupListeners = () => {
       try {
-        // Para organizadores, contar apenas suas próprias palestras
-        if (isOrganizer()) {
-          // Buscar palestras criadas por este organizador
+        // Para palestrantes, contar apenas suas próprias palestras
+        if (isPalestrante()) {
+          // Buscar palestras criadas por este palestrante
           cleanupPalestras = setupFirestoreListener(
             "palestras",
             (palestrasData: any[]) => {
@@ -69,7 +70,7 @@ const Dashboard = () => {
             }
           );
         } else {
-          // Administradores e participantes veem todas as palestras
+          // Organizadores, administradores e participantes veem todas as palestras
           cleanupPalestras = setupCountListener(
             "palestras",
             (count) => setTotalPalestras(count),
@@ -145,23 +146,23 @@ const Dashboard = () => {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
           
           {/* Card Palestras */}
           <Link href="/palestra" className="group">
-            <div className="bg-card/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 border border-border hover:shadow-2xl hover:border-primary/50 transition-all duration-500 group-hover:scale-105 group-hover:-translate-y-2 relative overflow-hidden">
+            <div className="bg-card/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 border border-border hover:shadow-2xl hover:border-primary/50 transition-all duration-500 group-hover:scale-105 group-hover:-translate-y-2 relative overflow-hidden min-h-[320px] flex flex-col">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              <div className="relative z-10">
+              <div className="relative z-10 flex flex-col h-full">
                 <div className="flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary/20 to-primary/10 rounded-2xl mb-8 group-hover:scale-110 transition-transform duration-300">
                   <Calendar className="h-10 w-10 text-primary" />
                 </div>
                 <h3 className="text-2xl font-bold text-foreground mb-4">
                   Palestras
                 </h3>
-                <p className="text-muted-foreground mb-8 leading-relaxed">
+                <p className="text-muted-foreground mb-8 leading-relaxed flex-grow">
                   Explore e inscreva-se em palestras sobre tecnologia, inovação e empreendedorismo
                 </p>
-                <div className="flex items-center text-primary font-semibold group-hover:text-accent transition-colors">
+                <div className="flex items-center text-primary font-semibold group-hover:text-accent transition-colors mt-auto">
                   Acessar Palestras
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-2 transition-transform duration-300" />
                 </div>
@@ -172,19 +173,19 @@ const Dashboard = () => {
           {/* Card Relatórios - apenas para administradores e organizadores */}
           {hasElevatedPermissions() && (
             <Link href="/relatorios" className="group">
-              <div className="bg-card/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 border border-border hover:shadow-2xl hover:border-accent/50 transition-all duration-500 group-hover:scale-105 group-hover:-translate-y-2 relative overflow-hidden">
+              <div className="bg-card/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 border border-border hover:shadow-2xl hover:border-accent/50 transition-all duration-500 group-hover:scale-105 group-hover:-translate-y-2 relative overflow-hidden min-h-[320px] flex flex-col">
               <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              <div className="relative z-10">
+              <div className="relative z-10 flex flex-col h-full">
                 <div className="flex items-center justify-center w-20 h-20 bg-gradient-to-br from-accent/20 to-accent/10 rounded-2xl mb-8 group-hover:scale-110 transition-transform duration-300">
                   <BarChart3 className="h-10 w-10 text-accent" />
                 </div>
                 <h3 className="text-2xl font-bold text-foreground mb-4">
                   Relatórios
                 </h3>
-                <p className="text-muted-foreground mb-8 leading-relaxed">
+                <p className="text-muted-foreground mb-8 leading-relaxed flex-grow">
                   Visualize estatísticas detalhadas e indicadores de presença e engajamento
                 </p>
-                <div className="flex items-center text-accent font-semibold group-hover:text-primary transition-colors">
+                <div className="flex items-center text-accent font-semibold group-hover:text-primary transition-colors mt-auto">
                   Ver Relatórios
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-2 transition-transform duration-300" />
                 </div>
@@ -196,19 +197,19 @@ const Dashboard = () => {
           {/* Card Gerenciar Palestras - para administradores e organizadores */}
           {hasElevatedPermissions() && (
             <Link href="/admin/palestras" className="group">
-              <div className="bg-card/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 border border-border hover:shadow-2xl hover:border-orange-500/50 transition-all duration-500 group-hover:scale-105 group-hover:-translate-y-2 relative overflow-hidden">
+              <div className="bg-card/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 border border-border hover:shadow-2xl hover:border-orange-500/50 transition-all duration-500 group-hover:scale-105 group-hover:-translate-y-2 relative overflow-hidden min-h-[320px] flex flex-col">
                 <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="relative z-10">
+                <div className="relative z-10 flex flex-col h-full">
                   <div className="flex items-center justify-center w-20 h-20 bg-gradient-to-br from-orange-500/20 to-orange-500/10 rounded-2xl mb-8 group-hover:scale-110 transition-transform duration-300">
                     <Settings className="h-10 w-10 text-orange-500" />
                   </div>
                   <h3 className="text-2xl font-bold text-foreground mb-4">
                     Gerenciar Palestras
                   </h3>
-                  <p className="text-muted-foreground mb-8 leading-relaxed">
+                  <p className="text-muted-foreground mb-8 leading-relaxed flex-grow">
                     Adicione materiais, descrições e gerencie o conteúdo das palestras
                   </p>
-                  <div className="flex items-center text-orange-500 font-semibold group-hover:text-accent transition-colors">
+                  <div className="flex items-center text-orange-500 font-semibold group-hover:text-accent transition-colors mt-auto">
                     Gerenciar Conteúdo
                     <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-2 transition-transform duration-300" />
                   </div>
@@ -220,19 +221,19 @@ const Dashboard = () => {
           {/* Card Gestão - só aparece para administradores */}
           {isAdmin() && (
             <Link href="/admin/users" className="group">
-              <div className="bg-card/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 border border-border hover:shadow-2xl hover:border-success/50 transition-all duration-500 group-hover:scale-105 group-hover:-translate-y-2 relative overflow-hidden">
+              <div className="bg-card/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 border border-border hover:shadow-2xl hover:border-success/50 transition-all duration-500 group-hover:scale-105 group-hover:-translate-y-2 relative overflow-hidden min-h-[320px] flex flex-col">
                 <div className="absolute inset-0 bg-gradient-to-br from-success/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="relative z-10">
+                <div className="relative z-10 flex flex-col h-full">
                   <div className="flex items-center justify-center w-20 h-20 bg-gradient-to-br from-success/20 to-success/10 rounded-2xl mb-8 group-hover:scale-110 transition-transform duration-300">
                     <Users className="h-10 w-10 text-success" />
                   </div>
                   <h3 className="text-2xl font-bold text-foreground mb-4">
                     Gestão de Usuários
                   </h3>
-                  <p className="text-muted-foreground mb-8 leading-relaxed">
-                    Gerencie cargos e permissões dos usuários do sistema
+                  <p className="text-muted-foreground mb-8 leading-relaxed flex-grow">
+                    Gerencie cargos e permissões dos outros usuários do sistema (Apenas Administradores)
                   </p>
-                  <div className="flex items-center text-success font-semibold group-hover:text-accent transition-colors">
+                  <div className="flex items-center text-success font-semibold group-hover:text-accent transition-colors mt-auto">
                     Gerenciar Usuários
                     <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-2 transition-transform duration-300" />
                   </div>
@@ -262,9 +263,9 @@ const Dashboard = () => {
                   )}
                 </div>
                 <div className="text-muted-foreground font-medium">
-                  {isOrganizer() ? "Minhas Palestras" : "Palestras Disponíveis"}
+                  {isPalestrante() ? "Minhas Palestras" : "Palestras Disponíveis"}
                 </div>
-                {isOrganizer() && (
+                {isPalestrante() && (
                   <div className="text-xs text-muted-foreground/70 mt-1">
                     Palestras que você criou
                   </div>

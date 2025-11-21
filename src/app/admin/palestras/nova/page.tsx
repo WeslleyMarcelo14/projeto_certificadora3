@@ -35,11 +35,13 @@ export default function NovaPalestra() {
     descricao: "",
   });
 
-  const podecriarPalestras = session?.user?.role === "administrador" || session?.user?.role === "organizador";
+  const podecriarPalestras = session?.user?.role === "administrador" || session?.user?.role === "organizador" || session?.user?.role === "palestrante";
 
   // Redirecionamento
   useEffect(() => {
-    if (status !== "loading" && (!session || !podecriarPalestras)) {
+    if (status === "unauthenticated") {
+      router.push('/dashboard');
+    } else if (status === "authenticated" && !podecriarPalestras) {
       router.push('/dashboard');
     }
   }, [session, status, router, podecriarPalestras]);

@@ -75,14 +75,16 @@ export default function AdminPalestras() {
     });
     const [mostrandoMateriais, setMostrandoMateriais] = useState<string | null>(null);
 
-    const podeGerenciarPalestras = session?.user?.role === "administrador" || session?.user?.role === "organizador";
+    const podeGerenciarPalestras = session?.user?.role === "administrador" || session?.user?.role === "organizador" || session?.user?.role === "palestrante";
 
     // Redirecionamento
     useEffect(() => {
-        if (status !== "loading" && (!session || !podeGerenciarPalestras)) {
+        if (status === "unauthenticated") {
+            router.push('/');
+        } else if (status === "authenticated" && !podeGerenciarPalestras) {
             router.push('/dashboard');
         }
-    }, [session, status, router, podeGerenciarPalestras]);
+    }, [status, router, podeGerenciarPalestras]);
 
     // Carregar palestras
     useEffect(() => {
@@ -110,14 +112,14 @@ export default function AdminPalestras() {
                 // Filtrar palestras baseado no role
                 let palestrasFiltradas = todasPalestras;
                 
-                // Se for organizador, mostrar apenas suas próprias palestras
-                if (session.user.role?.trim() === 'organizador') {
+                // Se for palestrante, mostrar apenas suas próprias palestras
+                if (session.user.role?.trim() === 'palestrante') {
                     palestrasFiltradas = todasPalestras.filter(palestra => 
                         palestra.criadoPor === session.user.id || 
                         palestra.criadoPorEmail === session.user.email
                     );
                 }
-                // Administradores veem todas as palestras (comportamento padrão)
+                // Organizadores e administradores veem todas as palestras
 
                 setPalestras(palestrasFiltradas);
                 setLoading(false);

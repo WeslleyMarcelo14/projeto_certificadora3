@@ -21,7 +21,7 @@ export default function PalestraDetalhe() {
 
   // Redireciona se não estiver logado
   useEffect(() => {
-    if (status !== "loading" && !session) {
+    if (status === "unauthenticated") {
       router.push('/');
     }
   }, [session, status, router]);
@@ -43,6 +43,15 @@ export default function PalestraDetalhe() {
 
   const handleInscrever = async () => {
     if (!palestra || !usuarioNome || !usuarioEmail) return;
+    
+    // Verificar se o usuário é o criador da palestra
+    if (palestra.criadoPor === session?.user?.id || 
+        palestra.criadoPorEmail === session?.user?.email ||
+        palestra.palestranteEmail === session?.user?.email) {
+      toast.error('Você não pode se inscrever na sua própria palestra!');
+      return;
+    }
+    
     setInscrevendo(true);
     try {
       await addDoc(collection(db, "inscricoes"), {
@@ -149,9 +158,30 @@ export default function PalestraDetalhe() {
           )}
         </div>
       ) : (
-        <Button onClick={handleInscrever} disabled={inscrevendo || palestra.inscritos >= palestra.vagas} className="w-full text-lg">
-          {palestra.inscritos >= palestra.vagas ? "Vagas Esgotadas" : inscrevendo ? "Inscrevendo..." : "Confirmar Inscrição"}
-        </Button>
+        (() => {
+          // Verificar se é o criador da palestra
+          const isCriador = palestra.criadoPor === session?.user?.id || 
+                           palestra.criadoPorEmail === session?.user?.email ||
+                           palestra.palestranteEmail === session?.user?.email;
+          
+          if (isCriador) {
+            return (
+              <Button disabled variant="secondary" className="w-full text-lg">
+                Esta é sua palestra
+              </Button>
+            );
+          }
+          
+          return (
+            <Button 
+              onClick={handleInscrever} 
+              disabled={inscrevendo || palestra.inscritos >= palestra.vagas} 
+              className="w-full text-lg"
+            >
+              {palestra.inscritos >= palestra.vagas ? "Vagas Esgotadas" : inscrevendo ? "Inscrevendo..." : "Confirmar Inscrição"}
+            </Button>
+          );
+        })()
       )}
       <Button variant="outline" className="w-full mt-4" onClick={() => router.push("/palestra")}>Voltar</Button>
     </div>

@@ -57,12 +57,14 @@ export default function EditarPalestra() {
     descricao: "",
   });
 
-  const podeEditarPalestras = session?.user?.role === "administrador" || session?.user?.role === "organizador";
+  const podeEditarPalestras = session?.user?.role === "administrador" || session?.user?.role === "organizador" || session?.user?.role === "palestrante";
 
   // Redirecionamento
   useEffect(() => {
-    if (status !== "loading" && (!session || !podeEditarPalestras)) {
-      router.push('/dashboard');
+    if (status === "unauthenticated") {
+      router.push("/dashboard");
+    } else if (status === "authenticated" && !podeEditarPalestras) {
+      router.push("/dashboard");
     }
   }, [session, status, router, podeEditarPalestras]);
 
@@ -79,8 +81,8 @@ export default function EditarPalestra() {
             ...snapshot.data(),
           } as Palestra;
           
-          // Verificar se organizador pode acessar esta palestra
-          if (session.user.role?.trim() === 'organizador') {
+          // Verificar se palestrante pode acessar esta palestra
+          if (session.user.role?.trim() === 'palestrante') {
             const podeAcessar = palestraData.criadoPor === session.user.id || 
                               palestraData.criadoPorEmail === session.user.email;
             

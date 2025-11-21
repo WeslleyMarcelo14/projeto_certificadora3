@@ -65,12 +65,14 @@ export default function GerenciarParticipantes() {
   const [busca, setBusca] = useState("");
   const [atualizando, setAtualizando] = useState<string | null>(null);
 
-  const podeGerenciarParticipantes = session?.user?.role === "administrador" || session?.user?.role === "organizador";
+  const podeGerenciarParticipantes = session?.user?.role === "administrador" || session?.user?.role === "organizador" || session?.user?.role === "palestrante";
 
   // Redirecionamento
   useEffect(() => {
-    if (status !== "loading" && (!session || !podeGerenciarParticipantes)) {
-      router.push('/dashboard');
+    if (status === "unauthenticated") {
+      router.push("/dashboard");
+    } else if (status === "authenticated" && !podeGerenciarParticipantes) {
+      router.push("/dashboard");
     }
   }, [session, status, router, podeGerenciarParticipantes]);
 
@@ -87,8 +89,8 @@ export default function GerenciarParticipantes() {
             ...snapshot.data(),
           } as Palestra;
           
-          // Verificar se organizador pode acessar esta palestra
-          if (session.user.role?.trim() === 'organizador') {
+          // Verificar se palestrante pode acessar esta palestra
+          if (session.user.role?.trim() === 'palestrante') {
             const podeAcessar = palestraData.criadoPor === session.user.id || 
                               palestraData.criadoPorEmail === session.user.email;
             
