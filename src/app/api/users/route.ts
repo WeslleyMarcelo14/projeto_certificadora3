@@ -50,10 +50,10 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PUT - Atualizar role do usuário
+// PUT - Atualizar o cargo do usuário
 export async function PUT(request: NextRequest) {
   try {
-    // Verifica se o usuário tem permissão (seria melhor implementar middleware de autenticação)
+    // Verifica se o usuário tem permissão
     const body = await request.json();
     const { userId, role } = body;
 

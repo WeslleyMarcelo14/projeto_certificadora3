@@ -196,7 +196,7 @@ export default function EditarPalestra() {
         </div>
       </header>
 
-      {/* Main Content */}
+      {/* Main */}
       <main className="max-w-4xl mx-auto px-4 py-8">
         <div className="bg-card/80 backdrop-blur-sm rounded-2xl shadow-lg border border-border p-8">
           <form onSubmit={handleSubmit} className="space-y-6">

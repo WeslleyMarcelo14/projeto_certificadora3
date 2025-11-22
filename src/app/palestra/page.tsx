@@ -71,7 +71,7 @@ export default function PalestrasPage() {
           snapshot.docs.map(async (docSnap) => {
             const data = docSnap.data();
             
-            // Contar participantes inscritos dinamicamente
+            // Contar participantes inscritos
             const participantesQuery = query(
               collection(db, 'participantes'),
               where('palestraId', '==', docSnap.id)
@@ -347,7 +347,7 @@ export default function PalestrasPage() {
 
                   <div className="flex-shrink-0">
                     <div className="flex flex-col gap-2 w-full lg:w-auto">
-                      {/* Botão Ver Detalhes - SEMPRE visível */}
+                      {/* Botão Ver Detalhes */}
                       <Button 
                         onClick={() => router.push(`/palestra/${palestra.id}`)}
                         variant="outline"

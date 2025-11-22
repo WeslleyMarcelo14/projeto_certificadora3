@@ -63,8 +63,7 @@ export default function PalestraDetalhe() {
 
 
 
-  // Verifica se já está inscrito (opcional: pode ser melhorado para buscar do Firestore)
-  // ...
+  // Verifica se já está inscrito
 
   const handleInscrever = async () => {
     if (!palestra || !usuarioNome || !usuarioEmail) return;

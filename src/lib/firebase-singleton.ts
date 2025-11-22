@@ -1,4 +1,4 @@
-// Firebase Singleton Pattern to prevent multiple initialization
+// Padrão Singleton do Firebase para prevenir inicialização múltipla
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { 
   getFirestore, 
@@ -20,10 +20,10 @@ const firebaseConfig = {
   appId: "1:205182081215:web:d58c2d956bb8962da88e0a"
 };
 
-// Initialize Firebase app only once using singleton pattern
+// Inicializa o app Firebase apenas uma vez usando o padrão singleton
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-// Connection state management
+// Gerenciamento do estado da conexão com Firestore
 class FirestoreConnectionManager {
   private static instance: FirestoreConnectionManager;
   private db: any;
@@ -32,8 +32,8 @@ class FirestoreConnectionManager {
   private maxReconnectAttempts = 5;
   private heartbeatInterval: NodeJS.Timeout | null = null;
   private lastActivity = Date.now();
-  private readonly IDLE_TIMEOUT = 5 * 60 * 1000; // 5 minutes
-  private readonly HEARTBEAT_INTERVAL = 30 * 1000; // 30 seconds
+  private readonly IDLE_TIMEOUT = 5 * 60 * 1000; 
+  private readonly HEARTBEAT_INTERVAL = 30 * 1000; 
 
   static getInstance(): FirestoreConnectionManager {
     if (!FirestoreConnectionManager.instance) {
@@ -51,14 +51,14 @@ class FirestoreConnectionManager {
       this.db = getFirestore(app);
       
       if (typeof window !== 'undefined') {
-        // Enable network and setup connection monitoring
+        // Habilita a rede e configura o monitoramento da conexão
         await enableNetwork(this.db);
         this.setupConnectionMonitoring();
         this.isInitialized = true;
-        console.log('✅ Firestore initialized successfully');
+        console.log('✅ Firestore inicializado com sucesso');
       }
     } catch (error) {
-      console.error('❌ Error initializing Firestore:', error);
+      console.error('❌ Erro ao inicializar o Firestore:', error);
       throw error;
     }
 
@@ -68,10 +68,10 @@ class FirestoreConnectionManager {
   private setupConnectionMonitoring() {
     if (typeof window === 'undefined') return;
 
-    // Start heartbeat to keep connection alive
+    // Inicia o heartbeat para manter a conexão ativa
     this.startHeartbeat();
 
-    // Listen for page visibility changes
+    // listener para mudanças de visibilidade da página
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
         this.handlePageHidden();
@@ -80,7 +80,7 @@ class FirestoreConnectionManager {
       }
     });
 
-    // Listen for online/offline events
+    // Listeners para mudanças na conectividade da rede
     window.addEventListener('online', () => this.handleOnline());
     window.addEventListener('offline', () => this.handleOffline());
   }
@@ -94,7 +94,7 @@ class FirestoreConnectionManager {
       const timeSinceLastActivity = Date.now() - this.lastActivity;
       
       if (timeSinceLastActivity > this.IDLE_TIMEOUT) {
-        console.log('🔄 Firestore connection idle, refreshing...');
+        console.log('🔄 Conexão do Firestore ociosa, atualizando...');
         this.refreshConnection();
       }
     }, this.HEARTBEAT_INTERVAL);
@@ -107,10 +107,10 @@ class FirestoreConnectionManager {
         await new Promise(resolve => setTimeout(resolve, 1000));
         await enableNetwork(this.db);
         this.updateActivity();
-        console.log('✅ Firestore connection refreshed');
+        console.log('✅ Conexão do Firestore atualizada com sucesso');
       }
     } catch (error) {
-      console.warn('⚠️ Could not refresh Firestore connection:', error);
+      console.warn('⚠️ Não foi possível atualizar a conexão do Firestore:', error);
     }
   }
 
@@ -128,12 +128,12 @@ class FirestoreConnectionManager {
   }
 
   private async handleOnline() {
-    console.log('🌐 Back online, refreshing Firestore connection');
+    console.log('🌐 Online novamente, atualizando conexão do Firestore');
     await this.refreshConnection();
   }
 
   private async handleOffline() {
-    console.log('📴 Offline detected');
+    console.log('📴 Offline detectado');
   }
 
   updateActivity() {
@@ -142,7 +142,7 @@ class FirestoreConnectionManager {
 
   getDb() {
     if (!this.db) {
-      throw new Error('Firestore not initialized. Call initialize() first.');
+      throw new Error('Firestore não foi inicializado ainda.');
     }
     this.updateActivity();
     return this.db;
@@ -156,43 +156,43 @@ class FirestoreConnectionManager {
       try {
         await terminate(this.db);
       } catch (error) {
-        console.warn('Error terminating Firestore:', error);
+        console.warn('Erro ao encerrar o Firestore:', error);
       }
     }
     this.isInitialized = false;
   }
 }
 
-// Initialize Firestore with connection management
+// Inicializa o Firestore com gerenciamento de conexão
 const connectionManager = FirestoreConnectionManager.getInstance();
 let db: any;
 
 if (typeof window !== 'undefined') {
-  // Client-side initialization
+  // Inicialização Client-side
   connectionManager.initialize().then(database => {
     db = database;
   }).catch(error => {
     console.error('Failed to initialize Firestore:', error);
   });
 } else {
-  // Server-side initialization
+  // Inicialização Server-side
   db = getFirestore(app);
 }
 
-// Initialize Auth
+// Inicializa a Autenticação
 export const auth = getAuth(app);
 
-// Configure Google Auth Provider with better settings
+// Configura o Provedor de Autenticação do Google com melhores configurações
 export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({
   prompt: 'select_account',
   access_type: 'offline'
 });
 
-// Initialize Realtime Database
+// Inicializa o Realtime Database
 export const database = getDatabase(app);
 
-// Export Firestore with connection management
+// Exporta o Firestore com gerenciamento de conexão
 export { db };
 export const firestoreManager = connectionManager;
 export default app;

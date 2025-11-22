@@ -47,8 +47,8 @@ type Palestra = {
     inscritos: number;
     descricao?: string;
     materiais?: Material[];
-    criadoPor?: string; // ID do usuário que criou a palestra
-    criadoPorEmail?: string; // Email do criador para referência
+    criadoPor?: string; 
+    criadoPorEmail?: string; 
 };
 
 type Material = {
@@ -109,7 +109,7 @@ export default function AdminPalestras() {
                     criadoPorEmail: doc.data().criadoPorEmail,
                 }));
 
-                // Filtrar palestras baseado no role
+                // Filtrar palestras baseado no cargo do usuário
                 let palestrasFiltradas = todasPalestras;
                 
                 // Se for palestrante, mostrar apenas suas próprias palestras
@@ -273,7 +273,7 @@ export default function AdminPalestras() {
                 </div>
             </header>
 
-            {/* Main Content */}
+            {/* Main */}
             <main className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 lg:py-8">
                 {palestras.length === 0 ? (
                     <div className="text-center py-8 sm:py-12">
@@ -363,7 +363,7 @@ export default function AdminPalestras() {
                                     </div>
                                 </div>
 
-                                {/* Área expandida com materiais */}
+                                {/* Painel contendo os materiais */}
                                 {mostrandoMateriais === palestra.id && (
                                     <div className="border-t border-border pt-6 space-y-6">
 

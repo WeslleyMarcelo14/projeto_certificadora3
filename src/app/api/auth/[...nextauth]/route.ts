@@ -8,7 +8,7 @@ import { getUserRoleAdmin, createUserAdmin, isAdminAvailable } from '../../../..
 console.log("NEXTAUTH_URL:", process.env.NEXTAUTH_URL);
 console.log("GOOGLE_CLIENT_ID:", process.env.GOOGLE_CLIENT_ID);
 
-// Configuração explícita da URL base
+// Configuração da URL base
 const NEXTAUTH_URL = "http://localhost:3000";
 
 const authOptions: NextAuthOptions = {
@@ -22,13 +22,12 @@ const authOptions: NextAuthOptions = {
     async signIn({ user, account }) {
       if (account?.provider === "google" && user.id && user.email) {
         try {
-          // Use transaction to prevent race conditions
           await runTransaction(db, async (transaction) => {
             const userRef = doc(db, "users", user.id);
             const userDoc = await transaction.get(userRef);
             
             if (!userDoc.exists()) {
-              // Check if any users exist to determine if this is the first user
+              // Verifica se existem usuários para determinar se este é o primeiro
               const usersCollection = collection(db, "users");
               const usersSnapshot = await getDocs(usersCollection);
               const isFirstUser = usersSnapshot.empty;
@@ -48,7 +47,7 @@ const authOptions: NextAuthOptions = {
                 console.log('🎉 Primeiro usuário criado como administrador:', user.email);
               }
             } else {
-              // Update existing user data (preserve role)
+              // Atualiza dados de usuário existente (preserva o cargo)
               const userData = {
                 name: user.name || '',
                 email: user.email,
@@ -60,7 +59,7 @@ const authOptions: NextAuthOptions = {
           });
         } catch (error) {
           console.error('Erro ao salvar usuário no Firebase:', error);
-          // Continue with login even if Firebase operation fails
+          // Continua com o login mesmo se a operação no Firebase falhar
         }
       }
       return true;
@@ -71,13 +70,10 @@ const authOptions: NextAuthOptions = {
         
         // Busca o role do usuário no Firebase com melhor tratamento de erros
         try {
-          // For development, skip Admin SDK and use Client SDK directly
-          // This reduces log noise and complexity
           throw new Error('Using Client SDK for development');
         } catch (error: any) {
-          // Fallback to client SDK
           try {
-            // Ensure Firestore connection is active
+            // Garante que a conexão com o Firestore esteja ativa
             firestoreManager.updateActivity();
             
             const userRef = doc(db, "users", token.sub);
@@ -88,11 +84,11 @@ const authOptions: NextAuthOptions = {
               session.user.role = userData.role || "participante";
               console.log(`✅ Role loaded via Client SDK for ${session.user.email}: ${session.user.role}`);
             } else {
-              // User document doesn't exist, create with default role
+              // Documento do usuário não encontrado, cria com função padrão
               console.warn(`⚠️ User document not found for ${session.user.email}, creating default`);
               session.user.role = "participante";
               
-              // Try to create user document
+              // Tenta criar o documento do usuário
               try {
                 const userData = {
                   name: session.user.name || '',
@@ -115,14 +111,14 @@ const authOptions: NextAuthOptions = {
           } catch (clientError: any) {
             console.error('Client SDK also failed:', clientError);
             
-            // Handle specific permission errors
+            // Trata erros específicos de permissão
             if (clientError.code === 'permission-denied') {
               console.warn('⚠️ Firestore permission denied. Check security rules. Using default role.');
             } else if (clientError.code === 'unavailable') {
               console.warn('⚠️ Firestore unavailable. Using default role.');
             }
             
-            // Always default to participant on any error
+            // Sempre define como participante em caso de qualquer erro
             session.user.role = "participante";
           }
         }

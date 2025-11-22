@@ -237,7 +237,7 @@ export default function GerenciarParticipantes() {
         </div>
       </header>
 
-      {/* Main Content */}
+      {/* Main */}
       <main className="max-w-7xl mx-auto px-4 py-8">
 
         {/* Informações da Palestra */}
@@ -263,7 +263,7 @@ export default function GerenciarParticipantes() {
           </div>
         </div>
 
-        {/* Estatísticas */}
+        {/* Estatísticas das palestras*/}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-card/80 backdrop-blur-sm rounded-xl shadow-lg border border-border p-6">
             <div className="flex items-center">

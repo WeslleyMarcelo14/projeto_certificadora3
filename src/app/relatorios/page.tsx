@@ -67,7 +67,7 @@ export default function Relatorios() {
       }
     );
     const unsubInscricoes = onSnapshot(
-      collection(db, "participantes"), // Usando a coleção correta
+      collection(db, "participantes"),
       (snapshot) => {
         const todasInscricoes: Inscricao[] = snapshot.docs.map((doc) => ({
           id: doc.id,
@@ -136,7 +136,7 @@ export default function Relatorios() {
     );
   }
 
-  // Se não estiver logado, não renderiza nada (aguarda redirect)
+  // Se não estiver logado, não renderiza nada
   if (!session) {
     return null;
   }

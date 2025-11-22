@@ -26,7 +26,7 @@ const Dashboard = () => {
   const [minhasInscricoes, setMinhasInscricoes] = useState<number>(0);
   const [loading, setLoading] = useState(true);
 
-  // Função para normalizar o role (remover espaços)
+  // Função para normalizar o cargo do usuário
   const getUserRole = () => {
     return session?.user?.role?.trim().toLowerCase() || 'participante';
   };
@@ -54,7 +54,6 @@ const Dashboard = () => {
       try {
         // Para palestrantes, contar apenas suas próprias palestras
         if (isPalestrante()) {
-          // Buscar palestras criadas por este palestrante
           cleanupPalestras = setupFirestoreListener(
             "palestras",
             (palestrasData: any[]) => {
@@ -81,7 +80,6 @@ const Dashboard = () => {
           );
         }
 
-        // Setup participantes listener - participantes veem suas inscrições
         // Organizadores e admins veem suas inscrições como participantes
         cleanupParticipantes = setupFirestoreListener<Participante>(
           "participantes",
@@ -146,7 +144,7 @@ const Dashboard = () => {
         </div>
       </header>
 
-      {/* Main Content */}
+      {/* Main */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
           
@@ -246,7 +244,7 @@ const Dashboard = () => {
 
         </div>
 
-        {/* Estatísticas rápidas (opcional) */}
+        {/* Estatísticas rápidas */}
         <div className="mt-12 sm:mt-16 lg:mt-20 bg-card/60 backdrop-blur-sm rounded-2xl shadow-xl p-6 sm:p-8 lg:p-10 border border-border relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5"></div>
           <div className="relative z-10">

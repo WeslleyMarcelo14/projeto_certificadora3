@@ -158,7 +158,7 @@ export default function AdminUsers() {
     );
   }
 
-  // Se não for admin, será redirecionado, mas evita flash de conteúdo
+  // Se não for admin, será redirecionado.
   if (!session || session.user?.role !== "administrador") {
     return null;
   }

@@ -1,7 +1,7 @@
-// Error monitoring and handling utilities for Firebase
+// Utilitários de monitoramento e tratamento de erros para o Firebase
 import { FirestoreError } from 'firebase/firestore';
 
-// Error types that we want to handle specifically
+// Tipos de erro do Firebase
 export enum FirebaseErrorType {
   INTERNAL_ASSERTION = 'internal-assertion-failed',
   PERMISSION_DENIED = 'permission-denied',
@@ -10,37 +10,37 @@ export enum FirebaseErrorType {
   UNKNOWN = 'unknown'
 }
 
-// Error handler interface
+// Interface de erros
 export interface ErrorHandler {
   onError: (error: FirestoreError, context?: string) => void;
   onRetry?: (error: FirestoreError, attempt: number) => boolean;
 }
 
-// Default error handler
+// Manipulador de erros padrão
 export class DefaultFirebaseErrorHandler implements ErrorHandler {
   private maxRetries = 3;
-  private retryDelay = 1000; // 1 second
+  private retryDelay = 1000;
 
   onError(error: FirestoreError, context = 'Firebase operation'): void {
     const errorType = this.classifyError(error);
     
-    console.error(`🔥 Firebase Error in ${context}:`, {
+    console.error(`🔥 Erro do Firebase em ${context}:`, {
       type: errorType,
       code: error.code,
       message: error.message,
       stack: error.stack
     });
 
-    // Handle specific error types
+    // Trata tipos de erro específicos
     switch (errorType) {
       case FirebaseErrorType.INTERNAL_ASSERTION:
-        console.warn('⚠️ Internal assertion error detected. This may be due to concurrent operations or initialization issues.');
+        console.warn('⚠️ Falha de asserção interna. Verifique a integridade dos dados e a lógica do aplicativo.');
         break;
       case FirebaseErrorType.PERMISSION_DENIED:
-        console.warn('⚠️ Permission denied. Check Firestore rules and user authentication.');
+        console.warn('⚠️ Permissão negada. Verifique as regras de segurança do Firestore.');
         break;
       case FirebaseErrorType.UNAVAILABLE:
-        console.warn('⚠️ Firestore unavailable. Check network connection.');
+        console.warn('⚠️ Serviço indisponível. Pode ser um problema temporário de rede ou do servidor.');
         break;
     }
   }
@@ -48,7 +48,6 @@ export class DefaultFirebaseErrorHandler implements ErrorHandler {
   onRetry(error: FirestoreError, attempt: number): boolean {
     const errorType = this.classifyError(error);
     
-    // Only retry for certain error types
     if (errorType === FirebaseErrorType.UNAVAILABLE || 
         errorType === FirebaseErrorType.NETWORK ||
         errorType === FirebaseErrorType.INTERNAL_ASSERTION) {
@@ -77,7 +76,7 @@ export class DefaultFirebaseErrorHandler implements ErrorHandler {
   }
 }
 
-// Retry wrapper for Firebase operations
+// Wrapper de repetição para operações do Firebase
 export async function withRetry<T>(
   operation: () => Promise<T>,
   errorHandler: ErrorHandler = new DefaultFirebaseErrorHandler(),
@@ -101,8 +100,8 @@ export async function withRetry<T>(
     }
   }
   
-  throw lastError || new Error('Operation failed without specific error');
+  throw lastError || new Error('A operação falhou sem um erro específico');
 }
 
-// Singleton instance for the application
+// Instância Singleton para a aplicação
 export const firebaseErrorHandler = new DefaultFirebaseErrorHandler();

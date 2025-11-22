@@ -1,4 +1,4 @@
-// Utility functions for safer Firestore operations
+// Funções utilitárias para operações no Firestore
 import { db } from './firebase';
 import { 
   collection, 
@@ -11,10 +11,10 @@ import {
 } from 'firebase/firestore';
 import { firebaseErrorHandler } from './firebase-error-handler';
 
-// Type for error callback
+// Tipo para callback de erro
 type ErrorCallback = (error: FirestoreError) => void;
 
-// Debounce function to prevent rapid successive calls
+// Função Debounce para evitar chamadas sucessivas rápidas
 function debounce<T extends (...args: any[]) => any>(
   func: T,
   wait: number
@@ -26,7 +26,7 @@ function debounce<T extends (...args: any[]) => any>(
   };
 }
 
-// Safe listener setup with automatic cleanup and error handling
+// Configuração segura de listener com limpeza automática e tratamento de erros
 export function setupFirestoreListener<T>(
   collectionName: string,
   callback: (data: T[]) => void,
@@ -60,24 +60,24 @@ export function setupFirestoreListener<T>(
           debouncedCallback(data);
         },
         (error) => {
-          firebaseErrorHandler.onError(error, `Firestore listener for ${collectionName}`);
+          firebaseErrorHandler.onError(error, `Firestore listener para ${collectionName}`);
           if (errorCallback && mounted) {
             errorCallback(error);
           }
         }
       );
     } catch (error) {
-      console.error(`Error setting up Firestore listener for ${collectionName}:`, error);
+      console.error(`Erro ao configurar listener do Firestore para ${collectionName}:`, error);
       if (errorCallback && mounted) {
         errorCallback(error as FirestoreError);
       }
     }
   };
 
-  // Setup with small delay to prevent initialization conflicts
+  // Configuração com pequeno atraso para prevenir conflitos de inicialização
   setTimeout(setup, 50);
 
-  // Return cleanup function
+  // Retorna a função de limpeza
   return () => {
     mounted = false;
     if (unsubscribe) {
@@ -87,7 +87,7 @@ export function setupFirestoreListener<T>(
   };
 }
 
-// Safe counter listener for simple counts
+// Listener de contagem seguro para contagens simples
 export function setupCountListener(
   collectionName: string,
   callback: (count: number) => void,
@@ -102,16 +102,15 @@ export function setupCountListener(
   );
 }
 
-// Utility to wait for Firestore to be ready
+// Utilitário para aguardar o Firestore estar pronto
 export function waitForFirestore(): Promise<void> {
   return new Promise((resolve, reject) => {
     if (typeof window === 'undefined') {
-      // Server-side, assume ready
       resolve();
       return;
     }
 
-    // Simple check to see if Firestore is accessible
+    // Verificação para ver se o Firestore está acessível
     try {
       const testCollection = collection(db, 'test');
       resolve();

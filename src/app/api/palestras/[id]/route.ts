@@ -5,7 +5,6 @@ import GoogleProvider from "next-auth/providers/google";
 import { db } from '../../../../lib/firebase';
 import { doc, deleteDoc, getDoc, setDoc, collection, getDocs } from 'firebase/firestore';
 
-// Replicamos as authOptions aqui para evitar problemas de importação
 const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
