@@ -321,17 +321,21 @@ docker-compose up -d --build  # Reconstruir
 Edite o arquivo `.env.local` e adicione as seguintes variáveis:
 
 ```bash
+# Firebase Configuration - Obtenha do Firebase Console > Project Settings > Your apps
+NEXT_PUBLIC_FIREBASE_API_KEY=sua-api-key-do-firebase
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=seu-projeto.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=seu-project-id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=seu-projeto.firebasestorage.app
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=seu-messaging-sender-id
+NEXT_PUBLIC_FIREBASE_APP_ID=seu-app-id
+
+# Google OAuth Configuration - Obtenha do Google Cloud Console
+GOOGLE_CLIENT_ID=seu-google-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=seu-google-client-secret
+
+# NextAuth Configuration
 NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET=sua-chave-secreta-muito-forte-aqui
-
-# Google OAuth (obtidos no Passo 1)
-GOOGLE_CLIENT_ID=seu-google-client-id-aqui
-GOOGLE_CLIENT_SECRET=seu-google-client-secret-aqui
-
-# Firebase Admin SDK (obtidos do arquivo JSON no Passo 2)
-FIREBASE_PROJECT_ID=projetocertificadora3
-FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@projetocertificadora3.iam.gserviceaccount.com
-FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nSua chave privada aqui\n-----END PRIVATE KEY-----\n"
+NEXTAUTH_SECRET=gere-uma-chave-secreta-forte-aqui
 ```
 
 ## 🎯 Sistema de Gestão de Usuários
