@@ -70,6 +70,10 @@
 
 ---
 
+
+# Como Instalar as Ferramentas
+- https://youtu.be/ChxgXrMqT94
+
 ## 🪟 Instalação (Windows)
 
 Baixe e instale as ferramentas:
@@ -374,8 +378,7 @@ Após fazer login como administrador:
 
 - Projeto em constante desenvolvimento; novas funcionalidades podem ser adicionadas.  
 - Compatibilidade de QR Code depende do navegador.  
-- Criado exclusivamente para **fins acadêmicos**.  
-
+- Criado exclusivamente para **fins acadêmicos**.    
 ---
 
 📚 **Desenvolvido com dedicação para a disciplina _Certificadora 3_.**
