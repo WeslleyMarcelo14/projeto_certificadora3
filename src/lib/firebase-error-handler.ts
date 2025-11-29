@@ -24,7 +24,7 @@ export class DefaultFirebaseErrorHandler implements ErrorHandler {
   onError(error: FirestoreError, context = 'Firebase operation'): void {
     const errorType = this.classifyError(error);
     
-    console.error(`🔥 Erro do Firebase em ${context}:`, {
+    console.error(`Erro do Firebase em ${context}:`, {
       type: errorType,
       code: error.code,
       message: error.message,
@@ -34,13 +34,13 @@ export class DefaultFirebaseErrorHandler implements ErrorHandler {
     // Trata tipos de erro específicos
     switch (errorType) {
       case FirebaseErrorType.INTERNAL_ASSERTION:
-        console.warn('⚠️ Falha de asserção interna. Verifique a integridade dos dados e a lógica do aplicativo.');
+        console.warn('Falha de asserção interna. Verifique a integridade dos dados e a lógica do aplicativo.');
         break;
       case FirebaseErrorType.PERMISSION_DENIED:
-        console.warn('⚠️ Permissão negada. Verifique as regras de segurança do Firestore.');
+        console.warn('Permissão negada. Verifique as regras de segurança do Firestore.');
         break;
       case FirebaseErrorType.UNAVAILABLE:
-        console.warn('⚠️ Serviço indisponível. Pode ser um problema temporário de rede ou do servidor.');
+        console.warn('Serviço indisponível. Pode ser um problema temporário de rede ou do servidor.');
         break;
     }
   }

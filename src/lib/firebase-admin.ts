@@ -21,16 +21,16 @@ if (isServer) {
       });
       
       adminDb = getFirestore(adminApp);
-      console.log('✅ Firebase Admin inicializado com conta de serviço');
+      console.log('Firebase Admin inicializado com conta de serviço');
     } else if (serviceAccountKey && getApps().length > 0) {
       adminApp = getApps()[0];
       adminDb = getFirestore(adminApp);
     } else {
-      console.log('ℹ️ Firebase Admin SDK desativado (sem chave de conta de serviço). Usando Client SDK.');
+      console.log('ℹFirebase Admin SDK desativado (sem chave de conta de serviço). Usando Client SDK.');
       // Não inicializa o Admin SDK sem as credenciais adequadas
     }
   } catch (error: any) {
-    console.warn('⚠️ Falha na inicialização do Firebase Admin, usando apenas Client SDK:', error?.message || error);
+    console.warn('Falha na inicialização do Firebase Admin, usando apenas Client SDK:', error?.message || error);
   }
 }
 

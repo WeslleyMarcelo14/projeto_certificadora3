@@ -12,12 +12,12 @@ import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getDatabase } from "firebase/database";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAwg1OWiLZ46GluDRAo8mctoLtBoCNJkQk",
-  authDomain: "projetocertificadora3.firebaseapp.com",
-  projectId: "projetocertificadora3",
-  storageBucket: "projetocertificadora3.firebasestorage.app",
-  messagingSenderId: "205182081215",
-  appId: "1:205182081215:web:d58c2d956bb8962da88e0a"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
 };
 
 // Inicializa o app Firebase apenas uma vez usando o padrão singleton
@@ -55,10 +55,10 @@ class FirestoreConnectionManager {
         await enableNetwork(this.db);
         this.setupConnectionMonitoring();
         this.isInitialized = true;
-        console.log('✅ Firestore inicializado com sucesso');
+        console.log('Firestore inicializado com sucesso');
       }
     } catch (error) {
-      console.error('❌ Erro ao inicializar o Firestore:', error);
+      console.error('Erro ao inicializar o Firestore:', error);
       throw error;
     }
 
@@ -94,7 +94,7 @@ class FirestoreConnectionManager {
       const timeSinceLastActivity = Date.now() - this.lastActivity;
       
       if (timeSinceLastActivity > this.IDLE_TIMEOUT) {
-        console.log('🔄 Conexão do Firestore ociosa, atualizando...');
+        console.log('Conexão do Firestore ociosa, atualizando...');
         this.refreshConnection();
       }
     }, this.HEARTBEAT_INTERVAL);
@@ -107,10 +107,10 @@ class FirestoreConnectionManager {
         await new Promise(resolve => setTimeout(resolve, 1000));
         await enableNetwork(this.db);
         this.updateActivity();
-        console.log('✅ Conexão do Firestore atualizada com sucesso');
+        console.log('Conexão do Firestore atualizada com sucesso');
       }
     } catch (error) {
-      console.warn('⚠️ Não foi possível atualizar a conexão do Firestore:', error);
+      console.warn('Não foi possível atualizar a conexão do Firestore:', error);
     }
   }
 
@@ -128,12 +128,12 @@ class FirestoreConnectionManager {
   }
 
   private async handleOnline() {
-    console.log('🌐 Online novamente, atualizando conexão do Firestore');
+    console.log('Online novamente, atualizando conexão do Firestore');
     await this.refreshConnection();
   }
 
   private async handleOffline() {
-    console.log('📴 Offline detectado');
+    console.log('Offline detectado');
   }
 
   updateActivity() {

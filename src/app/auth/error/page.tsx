@@ -2,10 +2,11 @@
 
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { Suspense } from "react";
 import { Button } from "../../../components/ui/button";
 import { AlertCircle } from "lucide-react";
 
-export default function AuthError() {
+function AuthErrorContent() {
   const searchParams = useSearchParams();
   const error = searchParams.get("error");
 
@@ -62,5 +63,17 @@ export default function AuthError() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function AuthError() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-background via-secondary/20 to-background flex items-center justify-center">
+        <div className="text-muted-foreground">Carregando...</div>
+      </div>
+    }>
+      <AuthErrorContent />
+    </Suspense>
   );
 }

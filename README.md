@@ -115,6 +115,8 @@ git --version
 
 ## 🧑‍💻️ Como Executar Localmente
 
+### Opção 1: Execução Local (Sem Docker)
+
 ```bash
 # 1. Clone o repositório
 git clone https://github.com/seu-usuario/certificadora3.git
@@ -153,10 +155,104 @@ npm run dev
 
 Acesse **http://localhost:3000/palestra** no navegador.
 
+### Opção 2: Execução com Docker 🐳
+
+#### Pré-requisitos
+- Docker instalado no sistema
+- Docker Compose (opcional, mas recomendado)
+
+#### Instalação do Docker
+
+**Linux (Ubuntu/Debian):**
+```bash
+# Instalar Docker
+sudo apt update
+sudo apt install -y docker.io docker-compose
+
+# Adicionar usuário ao grupo docker (para não precisar de sudo)
+sudo usermod -aG docker $USER
+
+# Reinicie o sistema ou faça logout/login para aplicar as permissões
+```
+
+**Windows/Mac:**
+- Baixe o [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+
+#### Executar com Docker
+
+```bash
+# 1. Clone o repositório
+git clone https://github.com/seu-usuario/certificadora3.git
+cd certificadora3
+
+# 2. Certifique-se de que o arquivo .env.local existe com as configurações do Firebase
+
+# 3. Construir a imagem Docker
+docker build -t projeto-certificadora3 .
+
+# 4. Rodar o container
+docker run -d -p 3000:3000 --env-file .env.local --name certificadora3-app projeto-certificadora3
+
+# 5. Verificar se está rodando
+docker ps
+
+# 6. Ver logs em tempo real
+docker logs -f certificadora3-app
+```
+
+#### Comandos Docker Úteis
+
+```bash
+# Parar o container
+docker stop certificadora3-app
+
+# Iniciar o container novamente
+docker start certificadora3-app
+
+# Remover o container
+docker rm certificadora3-app
+
+# Remover a imagem
+docker rmi projeto-certificadora3
+
+# Ver todos os containers (incluindo parados)
+docker ps -a
+
+# Entrar no container (para debug)
+docker exec -it certificadora3-app sh
+
+# Reconstruir após mudanças no código
+docker stop certificadora3-app
+docker rm certificadora3-app
+docker build -t projeto-certificadora3 .
+docker run -d -p 3000:3000 --env-file .env.local --name certificadora3-app projeto-certificadora3
+```
+
+#### Usando Docker Compose (Recomendado)
+
+```bash
+# Construir e iniciar
+docker-compose up -d
+
+# Ver logs
+docker-compose logs -f
+
+# Parar
+docker-compose down
+
+# Reconstruir após mudanças
+docker-compose up -d --build
+```
+
+> **📝 Nota:** O Docker usa o arquivo `.env.local` para as variáveis de ambiente. Certifique-se de configurá-lo antes de rodar os containers.
+
+Acesse **http://localhost:3000** no navegador.
+
 ---
 
 ## 🔧 Comandos Úteis
 
+### Desenvolvimento Local
 ```bash
 # Executar em modo desenvolvimento
 npm run dev
@@ -166,6 +262,28 @@ npm run build
 
 # Iniciar build em produção
 npm run start
+```
+
+### Docker
+```bash
+# Construir imagem
+docker build -t projeto-certificadora3 .
+
+# Rodar container
+docker run -d -p 3000:3000 --env-file .env.local --name certificadora3-app projeto-certificadora3
+
+# Gerenciar containers
+docker ps              # Ver containers rodando
+docker logs -f certificadora3-app  # Ver logs
+docker stop certificadora3-app     # Parar
+docker start certificadora3-app    # Iniciar
+docker rm certificadora3-app       # Remover
+
+# Docker Compose
+docker-compose up -d        # Iniciar
+docker-compose down         # Parar e remover
+docker-compose logs -f      # Ver logs
+docker-compose up -d --build  # Reconstruir
 ```
 
 ---
